@@ -3,7 +3,7 @@ This is the official implementation for "CLIBD: Bridging Vision and Genomics for
 Links: [website](https://bioscan-ml.github.io/clibd/) | [paper](https://arxiv.org/abs/2405.17537)
 
 # Overview
-![Teaser](./docs/static/images/method.png)
+![Teaser](./docs/static/images/method.svg)
 Taxonomically classifying organisms at scale is crucial for monitoring biodiversity, understanding ecosystems, and preserving sustainability.  It is possible to taxonomically classify organisms based on their image or their [DNA barcode](https://en.wikipedia.org/wiki/DNA_barcoding).  While DNA barcodes are precise at species identification, they are less readily available than images.  Thus, we investigate whether we can use DNA barcodes to improve taxonomic classification using image.  
 
 We introduce CLIBD, a model uses contrastive learning to map biological images, DNA barcodes, and textual taxonomic labels to the same latent space.  The model is initialized using pretrained encoders for images ([vit-base-patch16-224](https://huggingface.co/google/vit-base-patch16-224)), DNA barcodes ([BarcodeBERT](https://github.com/Kari-Genomics-Lab/BarcodeBERT)), and textual taxonomic labels ([BERT-small](https://huggingface.co/prajjwal1/bert-small)), and the weights of the encoders are fine-tuned using LoRA.
@@ -44,7 +44,7 @@ We provide pretrained embeddings and model weights.  We evaluate our models by e
 Instead of conducting a full training, you can choose to download pre-trained models or pre-extracted embeddings for evaluation from the table. You may need to posistion the downloaded checkpoints and extracted features in to the proper position based on the config file.
 
 # Download dataset
-![Data Partioning Visual](./docs/static/images/partition.png) <br>
+![Data Partioning Visual](./docs/static/images/partition.svg) <br>
 For BIOSCAN 1M, we partition the dataset for our CLIBD experiments into a training set for contrastive learning, and validation and test partitions. The training set has records without any species labels as well as a set of seen species. The validation and test sets include seen and unseen species. These images are further split into subpartitions of queries and keys for evaluation.
 
 For BIOSCAN 5M, we use the dataset partitioning established in the BIOSCAN-5M paper.

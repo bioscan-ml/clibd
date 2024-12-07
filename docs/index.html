@@ -155,7 +155,7 @@
         <div class="column is-full-width">
           <div class="content has-text-justified">
             <h3 class="title is-3">Overview</h3>
-            <img src="./static/images/method.png" class="interpolation-image" alt="CLIBD method overview" />
+            <img src="./static/images/method.svg" class="interpolation-image" alt="CLIBD method overview" style="display:block; margin-left: auto; margin-right: auto;" />
             <p>
               Our CLIBD model consists of three encoders for processing images, DNA barcodes, and text.
               We start with pretrained encoders and fine-tune them using contrastive loss to align the image, DNA, and text embeddings. 
@@ -174,7 +174,7 @@
               <i>unseen</i> during for evaluation.  For the validation and test splits, we also separate samples that we use as <i>queries</i> from
               the labeled database of <i>keys</i> that we match against.  
             </p>
-            <img src="./static/images/partition.png" class="interpolation-image" alt="Data partition" />
+            <img src="./static/images/partition.svg" class="interpolation-image" alt="Data partition" style="display:block; margin-left: auto; margin-right: auto;" />
             <p>
               We use image embeddings as queries to DNA embeddings and show that we are able to perform taxonomic classification over 
               <a href="https://en.wikipedia.org/wiki/Order_(biology)">order</a>, <a href="https://en.wikipedia.org/wiki/Family_(biology)">family</a>, 
@@ -182,7 +182,7 @@
               As we go down the taxonomy, the classification problem becomes increasingly challenging as we go from just 16 classes at the order level
               to over 8000 at the species level.  In addition, there is a large imbalance across classes, with many species having less than 10 records.
             </p>  
-            <img src="./static/images/retrieval-accuracy-image-dna.png" class="interpolation-image" alt="Accuracy when retrieving from image to DNA" />
+            <img src="./static/images/retrieval-accuracy.svg" class="interpolation-image" alt="Accuracy when retrieving within and between image and DNA modalities" width="80%" style="display:block; margin-left: auto; margin-right: auto;" />
             <p>
               Examples of retrieving with image query and matching against DNA keys show that even with cross-modal retrieval we can retrieve samples that are visually similar.  
               The dark green border indicates the retrieved sample had the correct species, while the yellow green border indicates that the genus matches but not the species.
