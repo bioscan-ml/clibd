@@ -18,9 +18,8 @@ language:
 model_output_name: image_dna_text_4gpu
 evaluation_period: 5
 
-barcodeBERT_ckpt_path: ${project_root_path}/ckpt/BarcodeBERT/trained_with_5m/BIOSCAN-5M-BEST_k4_6_6_w1_m0_r0.pt
-
-ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text/best.pth
+# barcodeBERT_ckpt_path: ${project_root_path}/ckpt/BarcodeBERT/trained_with_5m/BIOSCAN-5M-BEST_k4_6_6_w1_m0_r0.pt
+# ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text/best.pth
 
 output_dim: 768
 port: 29531
