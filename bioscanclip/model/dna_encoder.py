@@ -12,15 +12,31 @@ from bioscanclip.util.util import PadSequence, KmerTokenizer, load_bert_model, r
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint):
+def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint, k=5):
+    """Load pre-trained BioScan BERT model with k-mer vocabulary
+    
+    Args:
+        bioscan_bert_checkpoint: Path to checkpoint file
+        k: k-mer size (default: 5)
+    """
     print(f"\nLoading model from {bioscan_bert_checkpoint}")
+    
+    # Build k-mer vocabulary
+    kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
+    vocab = build_vocab_from_iterator(kmer_iter, specials=["<MASK>", "<CLS>", "<UNK>"])
+    vocab.set_default_index(vocab["<UNK>"])
+    vocab_size = len(vocab)
+
+    # Load checkpoint
     ckpt = torch.load(bioscan_bert_checkpoint, map_location=device)
-    model_ckpt = remove_extra_pre_fix(ckpt["model"])
+    model_ckpt = remove_extra_pre_fix(ckpt["model"]) if "model" in ckpt else ckpt
 
-    assert "bert_config" in ckpt  # You may be trying to load an old checkpoint
-
-    bert_config = BertConfig(**ckpt["bert_config"])
+    # Configure and initialize model
+    config_dict = ckpt.get("bert_config", {"vocab_size": vocab_size, "output_hidden_states": True})
+    bert_config = BertConfig(**config_dict)
     model = BertForMaskedLM(bert_config)
+
+    # Clean up checkpoint
     if "bert.embeddings.position_ids" in model_ckpt:
         model_ckpt.pop("bert.embeddings.position_ids")
 
@@ -29,6 +45,7 @@ def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint):
             print(f"Removing unexpected key: {key}")
             model_ckpt.pop(key)
 
+    # Check for missing keys
     missing_keys = [
         "cls.predictions.bias",
         "cls.predictions.transform.dense.weight",
@@ -41,8 +58,10 @@ def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint):
     for key in missing_keys:
         if key not in model_ckpt:
             print(f"Warning: {key} not found in checkpoint, reinitializing.")
+
+    # Load state dict
     model.load_state_dict(model_ckpt, strict=False)
-    return model
+    return model.to(device)
 
 
 def get_sequence_pipeline(k=5):

@@ -96,9 +96,17 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
             label_list.extend(convert_label_dict_to_list_of_dict(label_batch))
             file_name_list.extend(list(processid_batch))
 
-    # Convert lists to numpy arrays
-    encoded_image_feature_list = None if len(encoded_image_feature_list) == 0 else np.array(encoded_image_feature_list)
-    encoded_dna_feature_list = None if len(encoded_dna_feature_list) == 0 else np.array(encoded_dna_feature_list)
-    encoded_text_feature_list = None if len(encoded_text_feature_list) == 0 else np.array(encoded_text_feature_list)
+    if len(encoded_image_feature_list) == 0:
+        encoded_image_feature_list = None
+    else:
+        encoded_image_feature_list = np.array(encoded_image_feature_list)
+    if len(encoded_dna_feature_list) == 0:
+        encoded_dna_feature_list = None
+    else:
+        encoded_dna_feature_list = np.array(encoded_dna_feature_list)
+    if len(encoded_text_feature_list) == 0:
+        encoded_text_feature_list = None
+    else:
+        encoded_text_feature_list = np.array(encoded_text_feature_list)
 
     return file_name_list, encoded_image_feature_list, encoded_dna_feature_list, encoded_text_feature_list, label_list
