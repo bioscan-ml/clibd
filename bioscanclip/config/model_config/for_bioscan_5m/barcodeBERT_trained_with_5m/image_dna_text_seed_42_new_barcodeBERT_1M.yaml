@@ -4,7 +4,7 @@ labels_for_driven_positive_and_negative_pairs:
 wandb_project_name: BIOSCAN-CLIP-5M
 using_train_seen_for_pre_train: true
 dataset: bioscan_5m
-pre_train_for_barcode_bert: BIOSCAN-5M
+pre_train_for_barcode_bert: BIOSCAN-1M
 image:
   input_type: image
   pre_train_model: vit_base_patch16_224
@@ -17,9 +17,6 @@ language:
 
 model_output_name: image_dna_text_4gpu
 evaluation_period: 5
-
-# barcodeBERT_ckpt_path: ${project_root_path}/ckpt/BarcodeBERT/trained_with_5m/BIOSCAN-5M-BEST_k4_6_6_w1_m0_r0.pt
-# ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text/best.pth
 
 output_dim: 768
 port: 29531
