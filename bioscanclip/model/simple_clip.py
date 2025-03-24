@@ -31,29 +31,28 @@ class SimpleCLIP(nn.Module):
             self.logit_bias = None
 
     def forward(self, image_input, dna_input, language_input):
-            image_output = None
-            dna_output = None
-            language_output = None
+        image_output = None
+        dna_output = None
+        language_output = None
 
-            if self.dna_encoder is not None:
-                sequences, att_mask = dna_input
-                dna_output = F.normalize(self.dna_encoder(sequences, att_mask), p=2, dim=-1)
+        if self.dna_encoder is not None:
+            dna_output = F.normalize(self.dna_encoder(dna_input), p=2, dim=-1)
 
-            if self.open_clip_model is not None:
-                if image_input is not None:
-                    image_features = self.open_clip_model.encode_image(image_input)
-                    image_output = F.normalize(image_features, p=2, dim=-1)
-                if language_input is not None:
-                    language_input = self.tokenizer_for_open_clip(language_input, context_length=77)
-                    language_input = language_input.to(image_input.device)
-                    text_features = self.open_clip_model.encode_text(language_input)
-                    language_output = F.normalize(text_features, p=2, dim=-1)
-            else:
-                if self.image_encoder is not None:
-                    image_output = F.normalize(self.image_encoder(image_input), p=2, dim=-1)
-                if self.language_encoder is not None:
-                    language_output = F.normalize(self.language_encoder(language_input), p=2, dim=-1)
-            return image_output, dna_output, language_output, self.logit_scale.exp(), self.logit_bias
+        if self.open_clip_model is not None:
+            if image_input is not None:
+                image_features = self.open_clip_model.encode_image(image_input)
+                image_output = F.normalize(image_features, p=2, dim=-1)
+            if language_input is not None:
+                language_input = self.tokenizer_for_open_clip(language_input, context_length=77)
+                language_input = language_input.to(image_input.device)
+                text_features = self.open_clip_model.encode_text(language_input)
+                language_output = F.normalize(text_features, p=2, dim=-1)
+        else:
+            if self.image_encoder is not None:
+                image_output = F.normalize(self.image_encoder(image_input), p=2, dim=-1)
+            if self.language_encoder is not None:
+                language_output = F.normalize(self.language_encoder(language_input), p=2, dim=-1)
+        return image_output, dna_output, language_output, self.logit_scale.exp(), self.logit_bias
 
 
 def load_vit_for_simclr_training(args, device=None):

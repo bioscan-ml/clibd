@@ -51,11 +51,10 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
     label_list = []
     file_name_list = []
 
-    pbar = tqdm(enumerate(dataloader), total=len(dataloader))
-    model.eval()
-
     tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)  # Load tokenizer
 
+    pbar = tqdm(enumerate(dataloader), total=len(dataloader))
+    model.eval()
     with torch.no_grad():
         for step, batch in pbar:
             pbar.set_description(f"Encoding features")
@@ -67,24 +66,22 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
                 language_input = {'input_ids': input_ids.to(device), 'token_type_ids': token_type_ids.to(device),
                                   'attention_mask': attention_mask.to(device)}
 
+            if isinstance(dna_input_batch, torch.Tensor):
+                dna_input_batch = dna_input_batch.to(device)
+            else:
             # Tokenizing DNA sequences
-            tokenized_dna_sequences = []
-            attention_masks = []
-            for dna_seq in dna_input_batch:
-                tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=133, return_tensors="pt")
-                input_seq = tokenized_output["input_ids"]
-                attention_mask = tokenized_output["attention_mask"]
-                tokenized_dna_sequences.append(input_seq)
-                attention_masks.append(attention_mask)
-
-            # Convert DNA tokenized sequences into tensors
-            dna_input_batch = torch.stack(tokenized_dna_sequences).squeeze(1).to(device)
-            attention_masks = torch.stack(attention_masks).squeeze(1).to(device)
+                tokenized_dna_sequences = []
+                for dna_seq in dna_input_batch:
+                    tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=133, return_tensors="pt")
+                    input_seq = tokenized_output["input_ids"]
+                    tokenized_dna_sequences.append(input_seq)
+                # Convert DNA tokenized sequences into tensors
+                dna_input_batch = torch.stack(tokenized_dna_sequences).squeeze(1).to(device)
 
             # Forward pass through model
             image_output, dna_output, language_output, logit_scale, logit_bias = model(
                 image_input_batch.to(device),
-                (dna_input_batch, attention_masks),  # Passing tokenized DNA sequences
+                dna_input_batch,  # Passing tokenized DNA sequences
                 language_input
             )
 

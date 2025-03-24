@@ -123,11 +123,10 @@ class LoRA_barcode_bert(nn.Module):
         for w_B in self.w_Bs:
             nn.init.zeros_(w_B.weight)
 
-    def forward(self, sequence, attention_mask) -> Tensor:
-
-
+    def forward(self, sequence) -> Tensor:
         return self.lora_barcode_bert(sequence).logits.softmax(dim=-1).mean(dim=1)
-
+    # def forward(self, x: Tensor) -> Tensor:
+    #     return self.lora_barcode_bert(x).logits.softmax(dim=-1).mean(dim=1)
 
 class Freeze_DNA_Encoder(nn.Module):
     def __init__(self):
