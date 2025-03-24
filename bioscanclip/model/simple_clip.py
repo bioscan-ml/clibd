@@ -188,9 +188,12 @@ def load_clip_model(args, device=None):
     if hasattr(args.model_config, 'dna'):
         if args.model_config.dna.input_type == "sequence":
             if dna_model == "barcode_bert" or dna_model == "lora_barcode_bert":
-                barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_canada_1_5_m
+                barcode_bert_ckpt = args.bioscan_bert_checkpoint
+
                 if hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M":
                     barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_bioscan_5_m
+                elif hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "CANADA-1M":
+                    barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_canada_1_5_m
 
                 pre_trained_barcode_bert = load_pre_trained_bioscan_bert(
                     bioscan_bert_checkpoint=barcode_bert_ckpt)
