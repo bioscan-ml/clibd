@@ -10,6 +10,7 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
+from bioscanclip.model.dna_encoder import get_sequence_pipeline
 from torch.utils.data.distributed import DistributedSampler
 import json
 import time
@@ -17,7 +18,7 @@ from transformers import AutoTokenizer
 from bioscanclip.model.language_encoder import load_pre_trained_bert
 import open_clip
 
-from bioscanclip.util.util import load_kmer_tokenizer
+from bioscanclip.util.util import load_kmer_tokenizer, TensorResizeLongEdge
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

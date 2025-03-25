@@ -279,17 +279,14 @@ def main_process(rank: int, world_size: int, args):
         if stop_flag.item() == 1:
             print(f"Process {rank} stopping at epoch {epoch} due to early stopping")
             break
-
         train_epoch(args.activate_wandb, args.model_config.epochs, epoch,
                                                                  pre_train_dataloader, model, optimizer,
                                                                  criterion, rank, rank=rank, scheduler=scheduler,
                                                                  for_open_clip=for_open_clip,
                                                                  fix_temperature=fix_temperature, scaler=scaler, enable_autocast=enable_amp)
-        
+
         if (epoch % args.model_config.evaluation_period == 0 or epoch == args.model_config.epochs - 1) and rank == 0 and epoch > eval_skip_epoch:
-
             original_model = model.module if hasattr(model, 'module') else model
-
             if args.save_ckpt:
                 print(f'Saving ckpt at epoch {epoch}')
                 last_ckpt_path = os.path.join(folder_path, f'last.pth')

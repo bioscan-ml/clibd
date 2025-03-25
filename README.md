@@ -3,7 +3,7 @@ This is the official implementation for "CLIBD: Bridging Vision and Genomics for
 Links: [website](https://bioscan-ml.github.io/clibd/) | [paper](https://arxiv.org/abs/2405.17537)
 
 # Overview
-![Teaser](./docs/static/images/method.png)
+![Teaser](./docs/static/images/method.svg)
 Taxonomically classifying organisms at scale is crucial for monitoring biodiversity, understanding ecosystems, and preserving sustainability.  It is possible to taxonomically classify organisms based on their image or their [DNA barcode](https://en.wikipedia.org/wiki/DNA_barcoding).  While DNA barcodes are precise at species identification, they are less readily available than images.  Thus, we investigate whether we can use DNA barcodes to improve taxonomic classification using image.  
 
 We introduce CLIBD, a model uses contrastive learning to map biological images, DNA barcodes, and textual taxonomic labels to the same latent space.  The model is initialized using pretrained encoders for images ([vit-base-patch16-224](https://huggingface.co/google/vit-base-patch16-224)), DNA barcodes ([BarcodeBERT](https://github.com/Kari-Genomics-Lab/BarcodeBERT)), and textual taxonomic labels ([BERT-small](https://huggingface.co/prajjwal1/bert-small)), and the weights of the encoders are fine-tuned using LoRA.
@@ -30,15 +30,16 @@ Depending on your GPU version, you may have to modify the torch version and othe
 # Pretrained embeddings and models
 We provide pretrained embeddings and model weights.  We evaluate our models by encoding the image or DNA barcode, and using the taxonomic labels from the closest matching embedding (either using image or DNA barcode).  See [Download dataset](#download-dataset) and [Running Experiments](#running-experiments) for how to get the data, and to train and evaluate the models.
 
+**NOTE: Currently the checkpoints and config files pointed by these links are expired, we are working to update them as soon as possible. We deeply apologize for any inconvenience this may have caused.**
 
 | Training data |  Aligned modalities |  Embeddings |  Model  | Config |
 |---------------|---------------------|-------------|---------|--------|
-| BIOSCAN-1M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/extracted_embedding/bioscan_1m/no_align_1m/extracted_features.zip) |  N/A   |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/config_files/for_bioscan_1m/lora_vit_lora_barcode_bert_lora_bert_ssl_no_loading.yaml)  |
-| BIOSCAN-1M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/extracted_embedding/bioscan_1m/image_dna_4gpu/extracted_feature_from_val_split.hdf5)|  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/bioscan_clip/version_0_2_0/final_experiments/image_dna_4gpu_50epoch/best.pth)   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_seed_42.yaml)  |
-| BIOSCAN-1M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/extracted_embedding/bioscan_1m/image_dna_text_4gpu/extracted_feature_from_val_split.hdf5)       |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/bioscan_clip/version_0_2_0/final_experiments/image_dna_text_4gpu_50epoch/best.pth) |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml) |
-| BIOSCAN-5M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/extracted_embedding/bioscan_5m/no_align_5m/extracted_features.zip)       |  N/A   |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/config_files/for_bioscan_5m/lora_vit_lora_barcode_bert_lora_bert_5m_no_loading.yaml)  |
-| BIOSCAN-5M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/extracted_embedding/bioscan_5m/image_dna_4gpu/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/bioscan_clip/version_0_2_0/new_5M_training/trained_with_5M_image_dna/best.pth)    |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_seed_42.yaml)  |
-| BIOSCAN-5M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/extracted_embedding/bioscan_5m/image_dna_text_4gpu/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/bioscan_clip/version_0_2_0/new_5M_training/trained_with_5M_image_dna_text/best.pth)|   [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_text_seed_42.yaml)  |
+| BIOSCAN-1M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/no_alignment/extracted_feature_from_test_split.hdf5) |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_no_loading.yaml)  |
+| BIOSCAN-1M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna/extracted_feature_from_test_split.hdf5)|  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna/best.pth)   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_seed_42.yaml)  |
+| BIOSCAN-1M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/extracted_feature_from_test_split.hdf5)       |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/best.pth) |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml) |
+| BIOSCAN-5M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/no_alignment/extracted_feature_from_test_split.hdf5)       |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/no_alignment_baseline/no_align.yaml)  |
+| BIOSCAN-5M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna/best.pth)    |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_seed_42.yaml)  |
+| BIOSCAN-5M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/best.pth)|   [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_text_seed_42.yaml)  |
 
 We also provide checkpoints trained with LoRA layers. You can download them from this [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/bioscan_clip/lora_version_ckpt.zip)
 
@@ -46,7 +47,7 @@ We also provide checkpoints trained with LoRA layers. You can download them from
 Instead of conducting a full training, you can choose to download pre-trained models or pre-extracted embeddings for evaluation from the table. You may need to posistion the downloaded checkpoints and extracted features in to the proper position based on the config file.
 
 # Download dataset
-![Data Partioning Visual](./docs/static/images/partition.png) <br>
+![Data Partioning Visual](./docs/static/images/partition.svg) <br>
 For BIOSCAN 1M, we partition the dataset for our CLIBD experiments into a training set for contrastive learning, and validation and test partitions. The training set has records without any species labels as well as a set of seen species. The validation and test sets include seen and unseen species. These images are further split into subpartitions of queries and keys for evaluation.
 
 For BIOSCAN 5M, we use the dataset partitioning established in the BIOSCAN-5M paper.
@@ -64,11 +65,13 @@ wget https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/data/version_0.2.1/
 ### Download BIOSCAN-5M data (190.4 GB)
 ```shell
 # From project folder
-mkdir -p data/BIOSCAN_5M/split_data
-cd data/BIOSCAN_5M/split_data
+mkdir -p data/BIOSCAN_5M
+cd data/BIOSCAN_5M
 wget https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/BIOSCAN_5M.hdf5
 ```
 For more information about the hdf5 files, please check [DATA.md](DATA.md).
+
+You can also download the processed data by checking our [huggimgface repo](https://huggingface.co/datasets/bioscan-ml/bioscan-clibd)
 
 ### Download data for generating hdf5 files
 
@@ -83,6 +86,11 @@ We recommend the use of [weights and biases](https://wandb.ai/site) to track and
 wandb login
 # Paste your wandb's API key
 ```
+Note: To enable wandb, you also need to modify /bioscanclip/config/global_config and set:
+```yaml
+debug_flag: false
+```
+
 
 ## Checkpoints
 
@@ -93,13 +101,13 @@ mkdir -p ckpt/BarcodeBERT/5_mer
 cd ckpt/BarcodeBERT/5_mer
 wget https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/BarcodeBERT/model_41.pth
 cd ../../..
-mkdir -p ckpt/bioscan_clip/trained_with_bioscan_1m
-cd ckpt/bioscan_clip/trained_with_bioscan_1m
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/ckpt/bioscan_clip/trained_with_bioscan_1m/image_dna_text.pth
-cd ../../..
-mkdir -p ckpt/bioscan_clip/trained_with_bioscan_5m
-cd ckpt/bioscan_clip/trained_with_bioscan_5m
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/ckpt/bioscan_clip/trained_with_bioscan_5m/image_dna_text.pth
+mkdir -p ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
+cd ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
+wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/best.pth
+cd ../../../..
+mkdir -p ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
+cd ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
+wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/best.pth
 ```
 For downloading all CLIBD pre-trained models: [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/ckpt.zip)
 
@@ -114,37 +122,34 @@ python scripts/train_cl.py 'model_config={config_name}'
 To train the full model (I+D+T) using BIOSCAN-1M:
 ```shell
 # From project folder
-python scripts/train_cl.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_ssl'
+python scripts/train_cl.py 'model_config=for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml'
 ```
 For multi-GPU training, you may need to specify the transport communication between the GPU using NCCL_P2P_LEVEL:
 ```shell
-NCCL_P2P_LEVEL=NVL python scripts/train_cl.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_ssl'
+NCCL_P2P_LEVEL=NVL python scripts/train_cl.py 'model_config=for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml'
 ```
 
 For example, using the following command, you can load the pre-trained ViT-B, BarcodeBERT, and BERT-small and fine-tune them through contrastive learning. Note that this training will only update their LoRA layers, not all the parameters.
 ```shell
-python scripts/train_cl.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_5m'
+python scripts/train_cl.py 'model_config=for_bioscan_5m/lora_vit_lora_barcode_bert_lora_bert_5m_no_loading.yaml'
 ```
 
 ## Evaluation
 
 During evaluation, we using the trained encoders to obtain embeddings for input image or DNA, and the find the closest matching image or DNA and use the corresponding taxonomical labels as the predicted labels.  We report both the micro and class averaged accuracy for seen and unseen species. 
 
-TODO: specify how to run evaluation for different models, and different query and key combinations.
-
 To run evaluation for BIOSCAN-1M:
 ```shell
 # From project folder
-python scripts/inference_and_eval.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_ssl'
+python scripts/inference_and_eval.py 'model_config=for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml'
 ```
 
 To run evaluation for BIOSCAN-5M:
 ```shell
-python scripts/inference_and_eval.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_5m'
+python scripts/inference_and_eval.py 'model_config=for_bioscan_5m/final_experiments/image_dna_text_seed_42.yaml'
 ```
 
 ## For BZSL experiment with the INSECT dataset.
-TODO add some acknowledgement about the INSECT dataset. Also, the description of the BZSL experiments should be added.
 
 To download unprocessed INSECT dataset, you can reference [BZSL](https://github.com/sbadirli/Fine-Grained-ZSL-with-DNA): 
 
@@ -153,8 +158,10 @@ mkdir -p data/INSECT
 cd data/INSECT
 # Download the images and metadata here.
 
+
 # Note that we need to get the other three labels because the INSECT dataset only has the species label.
 # For that, please edit get_all_species_taxo_labels_dict_and_save_to_json.py, change Entrez.email = None to your email 
+pip install biopython
 python get_all_species_taxo_labels_dict_and_save_to_json.py
 
 # Then, generate CSV and hdf5 file for the dataset.
@@ -184,12 +191,26 @@ unzip processed_data.zip
 
 ### Train CLIBD with INSECT dataset
 ```shell
-python scripts/train_cl.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_ssl_on_insect.yaml'
+python scripts/train_cl.py 'model_config=for_bioscan_1m/lora_vit_lora_barcode_bert_lora_bert_ssl_on_insect.yaml'
 ```
 
 ###  Extract image and DNA features of INSECT dataset.
+
+To perform contrastive learning for fine-tuning on the INSECT dataset.
+
 ```shell
-python scripts/extract_feature_for_insect_dataset.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_ssl_on_insect.yaml'
+python scripts/train_cl.py 'model_config=for_bioscan_1m/fine_tune_on_INSECT_dataset/image_dna_text_seed_42_on_INSECT_dataset.yaml'
+```
+
+To perform supervise fine-tune image encoder with INSECT dataset.
+```shell
+python scripts/BZSL/fine_tune_bioscan_clip_image_on_insect.py 'model_config=for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml'
+```
+
+For feature extracting
+
+```shell
+python scripts/extract_feature_for_insect_dataset.py 'model_config=for_bioscan_1m/fine_tune_on_INSECT_dataset/image_dna_text_seed_42_on_INSECT_dataset.yaml'
 ```
 Then, you may move the extracted features to the BZSL folder or download the pre-extracted feature.
 

@@ -15,7 +15,8 @@ language:
   input_type: sequence
   model: lora_bert
 
-model_output_name: image_dna_text_4gpu
+load_ckpt: false
+model_output_name: no_align_baseline
 evaluation_period: 1
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch/best.pth
 output_dim: 768
@@ -40,3 +41,8 @@ random_seed: false
 eval_skip_epoch: 23
 
 default_seed: 42
+
+fine_tuning_set:
+  batch_size: 150
+  epochs: 15
+  fine_tune_model_output_dir: ${model_output_dir}/${model_config.model_output_name}/supervise_fine_tune_ckpt

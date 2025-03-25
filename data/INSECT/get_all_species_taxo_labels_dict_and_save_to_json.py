@@ -86,8 +86,10 @@ if __name__ == '__main__':
     with open(filename, 'w') as f:
         json.dump(specie_to_other_labels, f, indent=4)
 
-    print(f'Dictionary has been saved to {filename}')
+    print("Done")
 
-    print(f'failed with following species:')
-    print(failed_species)
+    print(f'Dictionary has been saved to {filename}')
+    if len(failed_species) > 0:
+        print(f'failed with following species:')
+        print(failed_species)
 

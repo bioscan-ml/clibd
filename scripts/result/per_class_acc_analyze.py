@@ -5,7 +5,6 @@ import numpy as np
 from collections import Counter
 import math
 import pandas as pd
-from brokenaxes import brokenaxes
 import json
 import copy
 from scipy.interpolate import make_interp_spline

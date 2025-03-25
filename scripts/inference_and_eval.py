@@ -538,6 +538,7 @@ def main(args: DictConfig) -> None:
         args.model_config.ckpt_path = os.path.join(args.model_config.ckpt_path, "best.pth")
     elif os.path.exists(os.path.join(args.model_config.ckpt_path, "last.pth")):
         args.model_config.ckpt_path = os.path.join(args.model_config.ckpt_path, "last.pth")
+
     folder_for_saving = os.path.join(
         args.project_root_path, "extracted_embedding", args.model_config.dataset, args.model_config.model_output_name
     )
@@ -584,7 +585,7 @@ def main(args: DictConfig) -> None:
         unseen_dict["processed_id_list"] = id_dict["unseen_id_list"]
         keys_dict["processed_id_list"] = id_dict["key_id_list"]
         keys_dict["all_processed_id_list"] = id_dict["key_id_list"] + id_dict["key_id_list"] + id_dict["key_id_list"]
-        print("Done loading embeddings from file.")
+        print(f"Done loading embeddings from ‘{extracted_features_path}’")
 
     else:
         # initialize model
@@ -596,9 +597,8 @@ def main(args: DictConfig) -> None:
             pass
         else:
             checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
-
-            if "logit_scale" not in checkpoint:
-                checkpoint["logit_scale"] = torch.nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+            print(f"Loading model from {args.model_config.ckpt_path}")
+            print()
 
             model.load_state_dict(checkpoint)
 

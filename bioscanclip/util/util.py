@@ -826,6 +826,7 @@ def remove_module_from_state_dict(state_dict):
     return new_state_dict
 
 
+
 def load_kmer_tokenizer(args, k=4):
     base_pairs = "ACGT"
     # TODO: check if 'tokenize_n_nucleotide' in args.
@@ -858,3 +859,45 @@ def load_kmer_tokenizer(args, k=4):
     )
 
     return tokenizer
+
+class TensorResizeLongEdge(object):
+    def __init__(self, long_edge_size, interpolation_mode='bilinear'):
+        self.long_edge_size = long_edge_size
+        self.interpolation_mode = interpolation_mode
+
+    def __call__(self, tensor):
+        c, h, w = tensor.shape
+        scale = self.long_edge_size / max(h, w)
+        new_h = int(h * scale)
+        new_w = int(w * scale)
+        tensor = tensor.unsqueeze(0)
+        resized_tensor = F.interpolate(tensor, size=(new_h, new_w), mode=self.interpolation_mode, align_corners=False)
+        return resized_tensor.squeeze(0)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(long_edge_size={self.long_edge_size}, interpolation_mode={self.interpolation_mode})'
+
+class PadTo224Tensor(object):
+    def __init__(self, target_size=224, fill=0):
+        self.target_size = target_size
+        self.fill = fill
+
+    def __call__(self, tensor):
+        c, h, w = tensor.shape
+
+        if h > self.target_size or w > self.target_size:
+            raise ValueError("input tensor is larger than target size")
+
+        pad_h = self.target_size - h
+        pad_w = self.target_size - w
+
+        pad_top = pad_h // 2
+        pad_bottom = pad_h - pad_top
+        pad_left = pad_w // 2
+        pad_right = pad_w - pad_left
+
+        padded_tensor = F.pad(tensor, (pad_left, pad_right, pad_top, pad_bottom), value=self.fill)
+        return padded_tensor
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(target_size={self.target_size}, fill={self.fill})"
