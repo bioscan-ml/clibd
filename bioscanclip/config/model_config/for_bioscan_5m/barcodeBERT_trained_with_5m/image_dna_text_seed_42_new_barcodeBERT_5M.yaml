@@ -1,5 +1,5 @@
 batch_size: 200
-epochs: 1
+epochs: 10
 labels_for_driven_positive_and_negative_pairs:
 wandb_project_name: BIOSCAN-CLIP-5M
 using_train_seen_for_pre_train: true
@@ -16,7 +16,7 @@ language:
   pre_train_model: prajjwal1/bert-small
 
 model_output_name: image_dna_text_4gpu
-evaluation_period: 5
+evaluation_period: 3
 
 output_dim: 768
 port: 29531
