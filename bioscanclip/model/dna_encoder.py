@@ -45,20 +45,6 @@ def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint, k=5):
             print(f"Removing unexpected key: {key}")
             model_ckpt.pop(key)
 
-    # Check for missing keys
-    missing_keys = [
-        "cls.predictions.bias",
-        "cls.predictions.transform.dense.weight",
-        "cls.predictions.transform.dense.bias",
-        "cls.predictions.transform.LayerNorm.weight",
-        "cls.predictions.transform.LayerNorm.bias",
-        "cls.predictions.decoder.weight",
-        "cls.predictions.decoder.bias",
-    ]
-    for key in missing_keys:
-        if key not in model_ckpt:
-            print(f"Warning: {key} not found in checkpoint, reinitializing.")
-
     # Load state dict
     model.load_state_dict(model_ckpt, strict=False)
     return model.to(device)
