@@ -57,7 +57,7 @@ inference_and_eval_setting:
     independent: false
     load_cached_results: false
   put_all_key_together: false
-  eval_on: test
+  eval_on: val
 
 visualization:
   output_dir: ${project_root_path}/visualizations

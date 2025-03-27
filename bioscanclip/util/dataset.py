@@ -205,12 +205,21 @@ class Dataset_for_CL(Dataset):
                         ]
                     )
                 else:
-                    self.transform = transforms.Compose(
-                        [
-                            transforms.ToTensor(),
-                            transforms.Resize(size=256, antialias=True),
-                            transforms.CenterCrop(224),
-                        ]
+                    if hasattr(args.model_config, "transform_with_resize") and args.model_config.transform_with_resize:
+                        self.transform = transforms.Compose(
+                            [
+                                transforms.ToTensor(),
+                                TensorResizeLongEdge(224),
+
+                            ]
+                        )
+                    else:
+                        self.transform = transforms.Compose(
+                            [
+                                transforms.ToTensor(),
+                                transforms.Resize(size=256, antialias=True),
+                                transforms.CenterCrop(224),
+                            ]
                     )
         elif self.image_input_type == "feature":
             self.transform = None
@@ -218,10 +227,6 @@ class Dataset_for_CL(Dataset):
             raise TypeError(
                 f"Image input type can not be {self.image_input_type}, it must be either 'image' or 'feature'. Please check the config file."
             )
-
-        self.dne_tokenizer = None
-        if self.dna_inout_type == "sequence":
-            self.dne_tokenizer = load_kmer_tokenizer(args, k=4)
 
         if self.dna_inout_type not in ["sequence", "feature"]:
             raise TypeError(

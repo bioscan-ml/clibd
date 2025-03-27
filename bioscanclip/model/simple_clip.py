@@ -35,6 +35,7 @@ class SimpleCLIP(nn.Module):
         dna_output = None
         language_output = None
 
+
         if self.dna_encoder is not None:
             dna_output = F.normalize(self.dna_encoder(dna_input), p=2, dim=-1)
 
