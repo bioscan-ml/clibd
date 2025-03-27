@@ -20,6 +20,7 @@ import io
 from itertools import product
 from torchtext.vocab import vocab as build_vocab_from_dict
 
+
 LEVELS = ["order", "family", "genus", "species"]
 All_TYPE_OF_FEATURES_OF_QUERY = [
     "encoded_image_feature",
@@ -133,6 +134,9 @@ def remove_extra_pre_fix(state_dict):
 
 
 def load_bert_model(bert_model, path_to_ckpt):
+    # repo_id = "bioscan-ml/bioscan-clibd"
+    # file_name = "ckpt/BarcodeBERT/5_mer/model_41.pth"
+    # model_path = hf_hub_download(repo_id=repo_id, filename=file_name)
     state_dict = torch.load(path_to_ckpt, map_location=torch.device("cpu"))
     state_dict = remove_extra_pre_fix(state_dict)
     bert_model.load_state_dict(state_dict)
@@ -824,8 +828,6 @@ def remove_module_from_state_dict(state_dict):
     for key, value in state_dict.items():
         new_state_dict[key.replace("module.", "")] = value
     return new_state_dict
-
-
 
 def load_kmer_tokenizer(args, k=4):
     base_pairs = "ACGT"

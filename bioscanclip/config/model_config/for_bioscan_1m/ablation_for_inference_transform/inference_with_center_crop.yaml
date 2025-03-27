@@ -1,0 +1,49 @@
+batch_size: 500
+epochs: 30
+labels_for_driven_positive_and_negative_pairs:
+wandb_project_name: BIOSCAN-CLIP-small_experiments
+using_train_seen_for_pre_train: true
+dataset: bioscan_1m
+
+image:
+  input_type: image
+  model: lora_vit
+dna:
+  input_type: sequence
+  model: lora_barcode_bert
+language:
+  input_type: sequence
+  model: lora_bert
+
+model_output_name: image_dna_text_4gpu_inference_with_center_crop
+evaluation_period: 1
+ckpt_path: ${project_root_path}/ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch/best.pth
+output_dim: 768
+port: 29531
+
+disable_lora: true
+lr_scheduler: one_cycle
+lr_config:
+  lr: 1e-6
+  max_lr: 5e-5
+
+all_gather: true
+loss_setup:
+  gather_with_grad: true
+  use_horovod: false
+  local_loss: false
+fix_temperature: false
+amp: true
+
+random_seed: false
+
+eval_skip_epoch: 23
+
+default_seed: 42
+
+fine_tuning_set:
+  batch_size: 150
+  epochs: 15
+  fine_tune_model_output_dir: ${model_output_dir}/${model_config.model_output_name}/supervise_fine_tune_ckpt
+
+transform_with_resize: false

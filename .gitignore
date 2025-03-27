@@ -12,9 +12,7 @@ extracted_embedding
 Fine-Grained-ZSL-with-DNA
 representation_visualization*
 logs/retrieval
-
 image_retrieval/
-
 .build/
 .env
 .slurmignore
