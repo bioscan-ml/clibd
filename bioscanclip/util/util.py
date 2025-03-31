@@ -433,8 +433,10 @@ def print_micro_and_macro_acc(acc_dict, k_list, args):
                 return model_config[key].pre_train_model
         else:
             return "None"
-
-    row_for_csv_data = ['LoRA', alignment]
+        
+    learning_strategy = "FineTuning" if hasattr(model_config, "disable_lora") and model_config.disable_lora else "LoRA"
+    
+    row_for_csv_data = [learning_strategy, alignment]
     row_for_csv_data.append(read_encoder(model_config, "dna"))
     row_for_csv_data.append(read_encoder(model_config, "image"))
     row_for_csv_data.append(read_encoder(model_config, "language"))
@@ -831,7 +833,6 @@ def remove_module_from_state_dict(state_dict):
 
 def load_kmer_tokenizer(args, k=4):
     base_pairs = "ACGT"
-    # TODO: check if 'tokenize_n_nucleotide' in args.
     tokenize_n_nucleotide = False
     special_tokens = ["[MASK]", "[UNK]"] 
     UNK_TOKEN = "[UNK]"
