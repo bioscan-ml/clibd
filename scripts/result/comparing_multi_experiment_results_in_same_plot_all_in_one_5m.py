@@ -342,17 +342,7 @@ if __name__ == '__main__':
     acc_types = ["macro_acc", "macro_acc"]
     seen_or_unseen_list = ["seen", "unseen"]
 
-    # acc_dict_for_scott = {}
-    # for model_name in acc_dict.keys():
-    #     if model_name not in acc_dict_for_scott:
-    #         acc_dict_for_scott[model_name] = {}
-    #     for seen_or_unseen in seen_or_unseen_list:
-    #         if seen_or_unseen not in acc_dict_for_scott[model_name]:
-    #             acc_dict_for_scott[model_name][seen_or_unseen] = {}
-    #         for level in ['order', 'family', 'genus', 'species']:
-    #             acc_dict_for_scott[model_name][seen_or_unseen][level] = acc_dict[model_name][query][key][seen_or_unseen]['macro_acc']['1'][level]
-    #
-    # print(acc_dict_for_scott)
+
 
 
 
