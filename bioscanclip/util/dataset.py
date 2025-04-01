@@ -17,8 +17,8 @@ import time
 from transformers import AutoTokenizer
 from bioscanclip.model.language_encoder import load_pre_trained_bert
 import open_clip
+from bioscanclip.util.util import load_kmer_tokenizer, TensorResizeLongEdge
 
-from bioscanclip.util.util import TensorResizeLongEdge
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -125,6 +125,8 @@ class Dataset_for_CL(Dataset):
         self.dna_inout_type = dna_type
         if dna_tokens is not None:
             self.dna_tokens = torch.tensor(dna_tokens)
+        else:
+            self.dna_tokens = None
         self.length = length
         self.return_language = return_language
         self.for_training = for_training
@@ -259,7 +261,10 @@ class Dataset_for_CL(Dataset):
             if self.dna_tokens is None:
                 curr_dna_input = self.hdf5_split_group["barcode"][idx].decode("utf-8")
             else:
-                curr_dna_input = self.dna_tokens[idx]
+                dna_sequences = self.hdf5_split_group["barcode"][idx].decode("utf-8")
+                processed_barcode, att_mask = self.tokenizer(dna_sequences, offset=0)
+                curr_dna_input = [processed_barcode, att_mask]
+                import pdb; pdb.set_trace()
         else:
             curr_dna_input = self.hdf5_split_group["dna_features"][idx].astype(np.float32)
 
@@ -389,7 +394,6 @@ def construct_dataloader(
         args,
         split,
         length,
-        sequence_pipeline,
         return_language=False,
         labels=None,
         for_pre_train=False,
@@ -419,9 +423,6 @@ def construct_dataloader(
                 hdf5_file = h5py.File(args.bioscan_5m_data.path_to_hdf5_data, "r", libver="latest")
         else:
             hdf5_file = h5py.File(args.bioscan_data.path_to_hdf5_data, "r", libver="latest")
-
-        unprocessed_dna_barcode = np.array([item.decode("utf-8") for item in hdf5_file[split]["barcode"][:]])
-        barcode_bert_dna_tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode)
 
     dataset = Dataset_for_CL(
         args,
@@ -471,13 +472,11 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
 
     return_language = True
 
-    sequence_pipeline = get_sequence_pipeline()
-
     train_seen_dataloader = construct_dataloader(
         args,
         "train_seen",
         length_dict["train_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -490,7 +489,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "val_seen",
         length_dict["val_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -502,7 +501,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "val_unseen",
         length_dict["val_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -514,7 +513,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "seen_keys",
         length_dict["seen_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -526,7 +525,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "val_unseen_keys",
         length_dict["val_unseen_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -537,7 +536,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "test_unseen_keys",
         length_dict["test_unseen_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -559,13 +558,13 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
 
     return_language = True
 
-    sequence_pipeline = get_sequence_pipeline()
+    
 
     pre_train_dataloader = construct_dataloader(
         args,
         "no_split_and_seen_train",
         length_dict["no_split_and_seen_train"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -578,7 +577,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "all_keys",
         length_dict["all_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -590,7 +589,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "val_seen",
         length_dict["val_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -602,7 +601,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "val_unseen",
         length_dict["val_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -614,7 +613,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "test_seen",
         length_dict["test_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -626,7 +625,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "test_unseen",
         length_dict["test_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -637,7 +636,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "other_heldout",
         length_dict["other_heldout"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -653,13 +652,13 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
 
     return_language = True
 
-    sequence_pipeline = get_sequence_pipeline()
+    
 
     seen_val_dataloader = construct_dataloader(
         args,
         "val_seen",
         length_dict["val_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -671,7 +670,7 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
         args,
         "val_unseen",
         length_dict["val_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -683,7 +682,7 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
         args,
         "all_keys",
         length_dict["all_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -699,7 +698,7 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
                 args,
                 "no_split_and_seen_train",
                 length_dict["no_split_and_seen_train"],
-                sequence_pipeline,
+        
                 return_language=return_language,
                 labels=None,
                 for_pre_train=True,
@@ -712,7 +711,7 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
                 args,
                 "no_split",
                 length_dict["no_split"],
-                sequence_pipeline,
+        
                 return_language=return_language,
                 labels=None,
                 for_pre_train=True,
@@ -726,7 +725,7 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
             args,
             "train_seen",
             length_dict["train_seen"],
-            sequence_pipeline,
+    
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -742,14 +741,14 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
 
     return_language = True
 
-    sequence_pipeline = get_sequence_pipeline()
+    
 
     if hasattr(args.model_config, 'dataset') and args.model_config.dataset == "bioscan_5m":
         train_seen_dataloader = construct_dataloader(
             args,
             "seen_keys",
             length_dict["seen_keys"],
-            sequence_pipeline,
+    
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -761,7 +760,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "train_seen",
             length_dict["train_seen"],
-            sequence_pipeline,
+    
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -773,7 +772,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "val_seen",
         length_dict["val_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -785,7 +784,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "val_unseen",
         length_dict["val_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -797,7 +796,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "test_seen",
         length_dict["test_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -809,7 +808,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "test_unseen",
         length_dict["test_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -821,7 +820,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "seen_keys",
         length_dict["seen_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -834,7 +833,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "unseen_keys",
             length_dict["unseen_keys"],
-            sequence_pipeline,
+    
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -845,7 +844,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "unseen_keys",
             length_dict["unseen_keys"],
-            sequence_pipeline,
+    
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -858,7 +857,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "val_unseen_keys",
             length_dict["val_unseen_keys"],
-            sequence_pipeline,
+    
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -869,7 +868,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "test_unseen_keys",
             length_dict["test_unseen_keys"],
-            sequence_pipeline,
+    
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -881,7 +880,7 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "all_keys",
         length_dict["all_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -943,7 +942,7 @@ def species_list_to_labels(species_list, species_to_others):
 
 
 class INSECTDataset(Dataset):
-    def __init__(self, path_to_att_splits_mat, path_to_res_101_mat, image_hdf5_path, dna_transforms, species_to_others,
+    def __init__(self, path_to_att_splits_mat, path_to_res_101_mat, image_hdf5_path, species_to_others,
                  split, for_training=False, cl_label=False, for_open_clip=False, **kwargs) -> None:
         super().__init__()
         # self.metadata = pd.read_csv(metadata, sep="\t")
@@ -967,8 +966,6 @@ class INSECTDataset(Dataset):
         start_time = time.time()
         tokenizer = AutoTokenizer.from_pretrained("prajjwal1/bert-small")
         batch_encoded = tokenizer(four_label_str, return_tensors='pt', padding=True)
-
-        barcodes = tokenize_dna_sequence(dna_transforms, barcodes)
 
         self.for_training = for_training
 
@@ -1073,13 +1070,13 @@ def load_insect_dataloader_trainval(args, num_workers=8, shuffle_for_train_seen_
     with open(filename, 'r') as file:
         specie_to_other_labels = json.load(file)
 
-    sequence_pipeline = get_sequence_pipeline()
+    
 
     trainval_dataset = INSECTDataset(
         args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
         species_to_others=specie_to_other_labels, split="trainval_loc",
         image_hdf5_path=args.insect_data.path_to_image_hdf5,
-        dna_transforms=sequence_pipeline, for_training=True, cl_label=False,
+         for_training=True, cl_label=False,
         for_open_clip=args.model_config.for_open_clip
     )
 
@@ -1095,14 +1092,14 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
     with open(filename, 'r') as file:
         specie_to_other_labels = json.load(file)
 
-    sequence_pipeline = get_sequence_pipeline()
+    
 
     if load_all_in_one:
         all_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="all",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip
         )
 
         all_dataloader = DataLoader(all_dataset, batch_size=args.model_config.batch_size,
@@ -1114,7 +1111,7 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="train_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=True, cl_label=True,
+            for_training=True, cl_label=True,
             for_open_clip=args.model_config.for_open_clip
         )
 
@@ -1122,28 +1119,28 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="train_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip
         )
 
         val_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="val_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip
         )
 
         test_seen_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="test_seen_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip
         )
 
         test_unseen_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="test_unseen_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip
         )
         if rank is None:
             print(rank)

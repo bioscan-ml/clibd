@@ -17,7 +17,8 @@ from omegaconf import DictConfig, OmegaConf
 import h5py
 from PIL import Image
 import io
-# from huggingface_hub import hf_hub_download
+from itertools import product
+from torchtext.vocab import vocab as build_vocab_from_dict
 
 
 LEVELS = ["order", "family", "genus", "species"]
@@ -84,16 +85,31 @@ class PadSequence(object):
 
 
 class KmerTokenizer(object):
-    def __init__(self, k, stride=1):
+    def __init__(self, k, vocabulary_mapper, stride=1, padding=False, max_len=660):
         self.k = k
         self.stride = stride
+        self.padding = padding
+        self.max_len = max_len
+        self.vocabulary_mapper = vocabulary_mapper
 
-    def __call__(self, dna_sequence):
+    def __call__(self, dna_sequence, offset=0):
         tokens = []
-        for i in range(0, len(dna_sequence) - self.k + 1, self.stride):
-            k_mer = dna_sequence[i : i + self.k]
+        att_mask = [1] * (self.max_len // self.stride)
+        x = dna_sequence[offset:]
+        if self.padding:
+            if len(x) > self.max_len:
+                x = x[: self.max_len]
+            else:
+                att_mask[len(x) // self.stride :] = [0] * (len(att_mask) - len(x) // self.stride)
+                x = x + "N" * (self.max_len - len(x))
+        for i in range(0, len(x) - self.k + 1, self.stride):
+            k_mer = x[i : i + self.k]
             tokens.append(k_mer)
-        return tokens
+
+        tokens = torch.tensor(self.vocabulary_mapper(tokens), dtype=torch.int64)
+        att_mask = torch.tensor(att_mask, dtype=torch.int32)
+
+        return tokens, att_mask
 
 
 def set_seed(seed=None):
@@ -417,8 +433,10 @@ def print_micro_and_macro_acc(acc_dict, k_list, args):
                 return model_config[key].pre_train_model
         else:
             return "None"
-
-    row_for_csv_data = ['LoRA', alignment]
+        
+    learning_strategy = "FineTuning" if hasattr(model_config, "disable_lora") and model_config.disable_lora else "LoRA"
+    
+    row_for_csv_data = [learning_strategy, alignment]
     row_for_csv_data.append(read_encoder(model_config, "dna"))
     row_for_csv_data.append(read_encoder(model_config, "image"))
     row_for_csv_data.append(read_encoder(model_config, "language"))
@@ -812,6 +830,38 @@ def remove_module_from_state_dict(state_dict):
     for key, value in state_dict.items():
         new_state_dict[key.replace("module.", "")] = value
     return new_state_dict
+
+def load_kmer_tokenizer(args, k=4):
+    base_pairs = "ACGT"
+    tokenize_n_nucleotide = False
+    special_tokens = ["[MASK]", "[UNK]"] 
+    UNK_TOKEN = "[UNK]"
+    stride = 1
+    max_len = 660
+    
+    k_mer = k
+    kmers = ["".join(kmer) for kmer in product(base_pairs, repeat=k_mer)]
+
+    if tokenize_n_nucleotide:
+        prediction_kmers = []
+        other_kmers = []
+        for kmer in kmers:
+            if "N" in kmer:
+                other_kmers.append(kmer)
+            else:
+                prediction_kmers.append(kmer)
+
+        kmers = prediction_kmers + other_kmers
+
+    kmer_dict = dict.fromkeys(kmers, 1)
+    vocab = build_vocab_from_dict(kmer_dict, specials=special_tokens)
+    vocab.set_default_index(vocab[UNK_TOKEN])
+    vocab_size = len(vocab)
+    tokenizer = KmerTokenizer(
+        k_mer, vocab, stride=stride, padding=True, max_len=max_len
+    )
+
+    return tokenizer
 
 class TensorResizeLongEdge(object):
     def __init__(self, long_edge_size, interpolation_mode='bilinear'):
