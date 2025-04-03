@@ -15,7 +15,6 @@ ckpt_path: ${project_root_path}/ckpt/uni_model/uni_model/image/${model_config.mo
 
 output_dim: 768
 
-#
 #lr_scheduler: one_cycle
 lr_config:
   lr: 1e-6
