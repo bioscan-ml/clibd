@@ -575,12 +575,20 @@ def inference_and_print_result(keys_dict, seen_dict, unseen_dict, args, small_sp
     seen_gt_label = seen_dict["label_list"]
     unseen_gt_label = unseen_dict["label_list"]
     keys_label = keys_dict["label_list"]
-    pred_dict = {
-        "seen_id": seen_dict["processed_id_list"],
-        "seen_gt_label": seen_gt_label,
-        "unseen_id": unseen_dict["processed_id_list"],
-        "unseen_gt_label": unseen_gt_label,
-    }
+    try:
+        pred_dict = {
+            "seen_id": seen_dict["processed_id_list"],
+            "seen_gt_label": seen_gt_label,
+            "unseen_id": unseen_dict["processed_id_list"],
+            "unseen_gt_label": unseen_gt_label,
+        }
+    except:
+        pred_dict = {
+            "seen_id": seen_dict["file_name_list"],
+            "seen_gt_label": seen_gt_label,
+            "unseen_id": unseen_dict["file_name_list"],
+            "unseen_gt_label": unseen_gt_label,
+        }
 
 
     for query_feature_type in All_TYPE_OF_FEATURES_OF_QUERY:

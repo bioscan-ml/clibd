@@ -7,7 +7,7 @@ project_root_path: ${hydra:runtime.cwd}
 data_dir: ${project_root_path}/data
 activate_wandb: true
 save_inference : true
-load_inference: true
+load_inference: false
 enable_early_stopping: false
 bioscan_data:
   dir: ${data_dir}/BIOSCAN_1M
