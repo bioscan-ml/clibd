@@ -261,9 +261,7 @@ class Dataset_for_CL(Dataset):
             if self.dna_tokens is None:
                 curr_dna_input = self.hdf5_split_group["barcode"][idx].decode("utf-8")
             else:
-                dna_sequences = self.hdf5_split_group["barcode"][idx].decode("utf-8")
-                processed_barcode, att_mask = self.tokenizer(dna_sequences, offset=0)
-                curr_dna_input = [processed_barcode, att_mask]
+                curr_dna_input = self.dna_tokens[idx]
         else:
             curr_dna_input = self.hdf5_split_group["dna_features"][idx].astype(np.float32)
 
@@ -427,8 +425,8 @@ def construct_dataloader(
                     hdf5_file = h5py.File(args.bioscan_5m_data.path_to_hdf5_data, "r", libver="latest")
             else:
                 hdf5_file = h5py.File(args.bioscan_data.path_to_hdf5_data, "r", libver="latest")
-                unprocessed_dna_barcode = np.array([item.decode("utf-8") for item in hdf5_file[split]["barcode"][:]])
-                barcode_bert_dna_tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode)
+            unprocessed_dna_barcode = np.array([item.decode("utf-8") for item in hdf5_file[split]["barcode"][:]])
+            barcode_bert_dna_tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode)
 
     dataset = Dataset_for_CL(
         args,

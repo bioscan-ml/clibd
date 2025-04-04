@@ -92,7 +92,7 @@ class KmerTokenizer(object):
     def __call__(self, dna_sequence):
         tokens = []
         for i in range(0, len(dna_sequence) - self.k + 1, self.stride):
-            k_mer = dna_sequence[i: i + self.k]
+            k_mer = dna_sequence[i : i + self.k]
             tokens.append(k_mer)
         return tokens
 
