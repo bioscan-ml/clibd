@@ -83,6 +83,7 @@ class PadSequence(object):
             return dna_sequence + "N" * (self.max_len - len(dna_sequence))
 
 
+
 class KmerTokenizer(object):
     def __init__(self, k, stride=1):
         self.k = k
