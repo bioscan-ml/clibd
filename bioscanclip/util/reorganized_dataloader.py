@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 from torch.utils.data import Dataset
 from torchtext.vocab import build_vocab_from_iterator
+from bioscanclip.model.dna_encoder import get_sequence_pipeline
 
 
 class PadSequence(object):
@@ -138,18 +139,6 @@ class Dataset_for_Image_and_DNA(Dataset):
             self.labels[idx],
         )
 
-
-def get_sequence_pipeline(k=5):
-    kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
-    vocab = build_vocab_from_iterator(kmer_iter, specials=["<MASK>", "<CLS>", "<UNK>"])
-    vocab.set_default_index(vocab["<UNK>"])
-
-    max_len = 660
-    pad = PadSequence(max_len)
-    tokenizer = KmerTokenizer(k, stride=k)
-    sequence_pipeline = lambda x: [0, *vocab(tokenizer(pad(x)))]
-
-    return sequence_pipeline
 
 
 def tokenize_dna_sequence(pipeline, dna_input):
