@@ -85,6 +85,19 @@ class PadSequence(object):
 
 
 class KmerTokenizer(object):
+    def __init__(self, k, stride=1):
+        self.k = k
+        self.stride = stride
+
+    def __call__(self, dna_sequence):
+        tokens = []
+        for i in range(0, len(dna_sequence) - self.k + 1, self.stride):
+            k_mer = dna_sequence[i: i + self.k]
+            tokens.append(k_mer)
+        return tokens
+
+
+class NewKmerTokenizer(object):
     def __init__(self, k, vocabulary_mapper, stride=1, padding=False, max_len=660):
         self.k = k
         self.stride = stride
