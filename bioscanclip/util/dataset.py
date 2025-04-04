@@ -264,7 +264,6 @@ class Dataset_for_CL(Dataset):
                 dna_sequences = self.hdf5_split_group["barcode"][idx].decode("utf-8")
                 processed_barcode, att_mask = self.tokenizer(dna_sequences, offset=0)
                 curr_dna_input = [processed_barcode, att_mask]
-                import pdb; pdb.set_trace()
         else:
             curr_dna_input = self.hdf5_split_group["dna_features"][idx].astype(np.float32)
 
