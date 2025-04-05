@@ -480,11 +480,11 @@ def main(args: DictConfig) -> None:
         if args.activate_wandb:
             wandb.init(project=args.model_config.wandb_project_name + "fine_tune_image_classifier",
                        name=args.model_config.model_output_name)
-        pbar = tqdm(list(range(args.general_fine_tune_setting.epoch)))
+        pbar = tqdm(list(range(args.model_config.fine_tuning_set.epochs)))
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.AdamW(image_classifier.parameters(), lr=0.0001)
 
-        total_steps = len(train_seen_dataloader) * args.general_fine_tune_setting.epoch
+        total_steps = len(train_seen_dataloader) * args.model_config.fine_tuning_set.epochs
 
         scheduler = OneCycleLR(optimizer, max_lr=0.0001, total_steps=total_steps)
         for epoch in pbar:

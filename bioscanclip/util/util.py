@@ -219,13 +219,6 @@ def tokenize_dna_sequence(curr_dna_input, sequence_pipeline):
     return curr_dna_input
 
 
-def load_small_species(args):
-    small_species_list = None
-    if hasattr(args.bioscan_data, "path_to_small_species_list_json"):
-        with open(args.bioscan_data.path_to_small_species_list_json, "r") as json_file:
-            small_species_list = json.load(json_file)
-    return small_species_list
-
 
 def find_k_closest_records(
     input_file_name_list, input_feature_np_array, keys_file_name_list, keys_feature_np_array, k=5
