@@ -62,4 +62,6 @@ general_fine_tune_setting:
   epoch: 15
   batch_size: 200
 
+hf_repo_id: bioscan-ml/clibd
+
 default_seed: 42

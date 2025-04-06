@@ -26,6 +26,7 @@ from bioscanclip.util.util import (
     make_prediction,
     All_TYPE_OF_FEATURES_OF_KEY,
 )
+from huggingface_hub import hf_hub_download
 
 PLOT_FOLDER = "html_plots"
 RETRIEVAL_FOLDER = "image_retrieval"
@@ -595,12 +596,23 @@ def main(args: DictConfig) -> None:
 
         if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
             pass
-        else:
-            checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
-            print(f"Loading model from {args.model_config.ckpt_path}")
-            print()
-
+        # elif os.path.exists(args.model_config.ckpt_path):
+        #     checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
+        #     print(f"Loading model from {args.model_config.ckpt_path}")
+        #     print()
+        #     model.load_state_dict(checkpoint)
+        elif hasattr(args.model_config, "hf_model_name"):
+            checkpoint_path = hf_hub_download(
+                repo_id=args.hf_repo_id,
+                filename=args.model_config.hf_model_name,
+            )
+            checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
             model.load_state_dict(checkpoint)
+            print(f"Loading model from {args.hf_repo_id}/{args.model_config.hf_model_name}")
+        else:
+            raise ValueError("No checkpoint found. Please specify a valid checkpoint path.")
+
+
 
         # Load data
         # args.model_config.batch_size = 24
