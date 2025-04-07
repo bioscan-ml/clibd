@@ -596,11 +596,11 @@ def main(args: DictConfig) -> None:
 
         if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
             pass
-        # elif os.path.exists(args.model_config.ckpt_path):
-        #     checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
-        #     print(f"Loading model from {args.model_config.ckpt_path}")
-        #     print()
-        #     model.load_state_dict(checkpoint)
+        elif os.path.exists(args.model_config.ckpt_path):
+            checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
+            print(f"Loading model from {args.model_config.ckpt_path}")
+            print()
+            model.load_state_dict(checkpoint)
         elif hasattr(args.model_config, "hf_model_name"):
             checkpoint_path = hf_hub_download(
                 repo_id=args.hf_repo_id,
