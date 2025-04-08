@@ -71,7 +71,6 @@ class VITAttentionRollout:
                 hook = module.register_forward_hook(self.get_attention)
                 self.hooks.append(hook)
         self.attentions = []
-
     def get_attention(self, module, input, output):
         self.attentions.append(output.cpu().detach())
 
@@ -147,9 +146,9 @@ def get_and_save_vit_explaination(image_list, attn_rollout, transform, device, l
     # torch.cuda.empty_cache()
     # gc.collect()
 
-@hydra.main(config_path="../../bioscanclip/config", config_name="global_config", version_base="1.1")
+@hydra.main(config_path="../../../bioscanclip/config", config_name="global_config", version_base="1.1")
 def main(args: DictConfig) -> None:
-    save_path = os.path.join(args.project_root_path, "representation_visualization")
+    save_path = os.path.join(args.project_root_path, "image_representation_visualization")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Load some images from the hdf5 file
@@ -193,6 +192,9 @@ def main(args: DictConfig) -> None:
     get_and_save_vit_explaination(image_list, attn_rollout, transform, device,
                                   folder_name=os.path.join(save_path, "before_contrastive_learning"))
 
+
+
+    print("After contrastive learning")
     if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
         pass
     else:
@@ -205,7 +207,6 @@ def main(args: DictConfig) -> None:
     for block in image_encoder.lora_vit.blocks:
         block.attn.fused_attn = False
 
-    print("After contrastive learning")
     attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion="max")
     get_and_save_vit_explaination(image_list, attn_rollout, transform, device,
                                   folder_name=os.path.join(save_path, "after_contrastive_learning"))
@@ -216,6 +217,8 @@ def main(args: DictConfig) -> None:
         attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion="max")
         get_and_save_vit_explaination(image_list, attn_rollout, transform, device, layer_idx=layer_idx,
                                       folder_name=os.path.join(save_path, f"single_layer/{layer_idx}"))
+
+    print(f"Done, images saved to {save_path}")
 
 
 if __name__ == "__main__":

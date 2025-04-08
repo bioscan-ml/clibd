@@ -16,7 +16,6 @@ from PIL import Image
 from omegaconf import DictConfig
 from sklearn.metrics import silhouette_samples
 from umap import UMAP
-
 from bioscanclip.model.simple_clip import load_clip_model
 from bioscanclip.util.dataset import load_bioscan_dataloader_all_small_splits
 from bioscanclip.util.util import (

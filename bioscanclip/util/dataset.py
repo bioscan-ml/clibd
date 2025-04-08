@@ -1098,7 +1098,7 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
     with open(filename, 'r') as file:
         specie_to_other_labels = json.load(file)
 
-    
+
 
     if load_all_in_one:
         all_dataset = INSECTDataset(
@@ -1149,7 +1149,6 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
             for_training=False, for_open_clip=args.model_config.for_open_clip
         )
         if rank is None:
-            print(rank)
             insect_train_dataloader = DataLoader(train_dataset, batch_size=args.model_config.batch_size,
                                                  num_workers=num_workers, shuffle=True)
         else:
