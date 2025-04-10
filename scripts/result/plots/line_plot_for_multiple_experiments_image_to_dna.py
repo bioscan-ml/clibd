@@ -66,8 +66,9 @@ style_handles = [
     Line2D([0], [0], color='black', lw=2, linestyle='--', label='Unseen')
 ]
 
-legend1 = ax.legend(handles=method_handles, loc='lower left', bbox_to_anchor=(0, 0))
-ax.add_artist(legend1)
-legend2 = ax.legend(handles=style_handles, loc='lower left', bbox_to_anchor=(0.48, 0))
+# legend1 = ax.legend(handles=method_handles, loc='lower left', bbox_to_anchor=(0, 0))
+# ax.add_artist(legend1)
+# legend2 = ax.legend(handles=style_handles, loc='lower left', bbox_to_anchor=(0.48, 0))
 plt.tight_layout()
-plt.show()
+# plt.show()
+plt.savefig('image_to_dna.png', dpi=300, bbox_inches='tight')

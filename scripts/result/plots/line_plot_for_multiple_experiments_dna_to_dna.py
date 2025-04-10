@@ -71,4 +71,5 @@ legend1 = ax.legend(handles=method_handles, loc='lower left', bbox_to_anchor=(0,
 ax.add_artist(legend1)
 legend2 = ax.legend(handles=style_handles, loc='lower left', bbox_to_anchor=(0.48, 0))
 plt.tight_layout()
-plt.show()
+# plt.show()
+plt.savefig('dna_to_dna.png', dpi=300, bbox_inches='tight')
