@@ -184,7 +184,7 @@ def main(args: DictConfig) -> None:
     model.eval()
     # Get the image encoder
     image_encoder = get_image_encoder(model, device)
-    for block in image_encoder.lora_vit.blocks:
+    for block in image_encoder.base_image_encoder.blocks:
         block.attn.fused_attn = False
 
     print("Before contrastive learning")
@@ -204,7 +204,7 @@ def main(args: DictConfig) -> None:
     model.eval()
     # Get the image encoder
     image_encoder = get_image_encoder(model, device)
-    for block in image_encoder.lora_vit.blocks:
+    for block in image_encoder.base_image_encoder.blocks:
         block.attn.fused_attn = False
 
     attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion="max")

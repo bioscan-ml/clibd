@@ -910,3 +910,30 @@ class PadTo224Tensor(object):
 
     def __repr__(self):
         return f"{self.__class__.__name__}(target_size={self.target_size}, fill={self.fill})"
+
+
+def update_checkpoint_param_names(checkpoint):
+    """
+    This function takes a model as input and returns a dictionary that maps the parameter names of the model to their
+    corresponding indices in the state_dict.
+    """
+
+    param_name_mapping = {
+        "LoRA_barcode_bert": "CLIBDDNAEncoder",
+        "lora_barcode_bert": "base_dna_encoder",
+        "LoRA_ViT_timm": "CLIBDImageEncoder",
+        "lora_vit": "base_image_encoder",
+        "LoRA_bert": "CLIBDLanguageEncoder",
+        "lora_bert": "base_language_encoder",
+    }
+
+    new_checkpoint = {}
+
+    for name, tensor in checkpoint.items():
+        new_name = name
+        for key, value in param_name_mapping.items():
+            if key in new_name:
+                new_name = new_name.replace(key, value)
+        new_checkpoint[new_name] = tensor
+
+    return new_checkpoint

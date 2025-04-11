@@ -77,9 +77,9 @@ class _LoRALayer(nn.Module):
         return x
 
 
-class LoRA_barcode_bert(nn.Module):
+class CLIBDDNAEncoder(nn.Module):
     def __init__(self, model, r: int, num_classes: int = 0, lora_layer=None):
-        super(LoRA_barcode_bert, self).__init__()
+        super(CLIBDDNAEncoder, self).__init__()
 
         assert r > 0
         if lora_layer is not None:
@@ -116,11 +116,11 @@ class LoRA_barcode_bert(nn.Module):
             layer.attention.self.value = _LoRALayer(w_v_linear, w_a_linear_v, w_b_linear_v)
 
         self.reset_parameters()
-        self.lora_barcode_bert = model
+        self.base_dna_encoder = model
 
         if num_classes > 0:
-            self.lora_barcode_bert.cls.predictions.decoder = nn.Linear(
-                self.lora_barcode_bert.cls.predictions.decoder.in_features, num_classes)
+            self.base_dna_encoder.cls.predictions.decoder = nn.Linear(
+                self.base_dna_encoder.cls.predictions.decoder.in_features, num_classes)
 
     def reset_parameters(self) -> None:
         for w_A in self.w_As:
@@ -129,7 +129,12 @@ class LoRA_barcode_bert(nn.Module):
             nn.init.zeros_(w_B.weight)
 
     def forward(self, sequence) -> Tensor:
-        return self.lora_barcode_bert(sequence).logits.softmax(dim=-1).mean(dim=1)
+        """
+        TODO: change to "return self.base_dna_encoder(x).hidden_states[-1].mean(dim=1)"
+        TODO: Then also retrain the models.
+        """
+
+        return self.base_dna_encoder(sequence).logits.softmax(dim=-1).mean(dim=1)
 
 class Freeze_DNA_Encoder(nn.Module):
     def __init__(self):

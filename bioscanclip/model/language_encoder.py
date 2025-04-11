@@ -33,9 +33,9 @@ class _LoRALayer(nn.Module):
         return x
 
 
-class LoRA_bert(nn.Module):
+class CLIBDLanguageEncoder(nn.Module):
     def __init__(self, model, r: int, num_classes: int = 0, lora_layer=None):
-        super(LoRA_bert, self).__init__()
+        super(CLIBDLanguageEncoder, self).__init__()
 
         assert r > 0
         if lora_layer is not None:
@@ -72,10 +72,10 @@ class LoRA_bert(nn.Module):
             layer.attention.self.value = _LoRALayer(w_v_linear, w_a_linear_v, w_b_linear_v)
 
         self.reset_parameters()
-        self.lora_bert = model
+        self.base_language_encoder = model
 
         if num_classes > 0:
-            self.proj = nn.Linear(self.lora_bert.pooler.dense.out_features, num_classes)
+            self.proj = nn.Linear(self.base_language_encoder.pooler.dense.out_features, num_classes)
 
 
     def reset_parameters(self) -> None:
@@ -86,7 +86,7 @@ class LoRA_bert(nn.Module):
 
     def forward(self, x) -> Tensor:
 
-        return self.proj(self.lora_bert(**x).last_hidden_state.mean(dim=1))
+        return self.proj(self.base_language_encoder(**x).last_hidden_state.mean(dim=1))
 
 class LoRA_bert_OpenCLIP(nn.Module):
     def __init__(self, bert_model, r: int, num_classes: int = 0, lora_layer=None):

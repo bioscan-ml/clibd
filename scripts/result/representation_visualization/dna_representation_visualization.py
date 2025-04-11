@@ -213,7 +213,7 @@ def main(args: DictConfig) -> None:
 
     # draw_dna_barcode(dna_list, dna_tokens_list, save_path)
 
-    for single_layer in dna_encoder.lora_barcode_bert.bert.encoder.layer:
+    for single_layer in dna_encoder.base_dna_encoder.bert.encoder.layer:
         single_layer.attention.self.fused_attn = False
         # single_layer.attention.fused_attn = False
 
@@ -236,7 +236,7 @@ def main(args: DictConfig) -> None:
     dna_encoder = model.dna_encoder
     dna_encoder.eval()
     dna_encoder.to(device)
-    for single_layer in dna_encoder.lora_barcode_bert.bert.encoder.layer:
+    for single_layer in dna_encoder.base_dna_encoder.bert.encoder.layer:
         single_layer.attention.self.fused_attn = False
         # single_layer.attention.fused_attn = False
     attn_rollout = BarcodeBERTAttentionRollout(dna_encoder, attention_layer_name='attention.self.dropout',
