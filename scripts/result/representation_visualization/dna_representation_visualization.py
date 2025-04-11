@@ -5,9 +5,6 @@ import h5py
 import hydra
 import numpy as np
 import torch
-import torch.nn.functional as F
-import torchvision.transforms as transforms
-from PIL import Image
 from omegaconf import DictConfig
 from tqdm import tqdm
 import gc
@@ -133,47 +130,37 @@ def get_some_dna_from_hdf5(hdf5_group, n=None):
     return dna_list, dna_tokens_list
 
 def draw_dna_barcode(dna_barcode_list, mask_list, save_path):
-    # 加载默认字体
+
     font = ImageFont.load_default()
-    # 计算单个字符的尺寸
     bbox = font.getbbox("A")
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
     line_spacing = 5
 
-    # 设置边距和图像尺寸
     margin_top = 10
     margin_bottom = 10
     margin_left = 10
     img_width = 4200
     img_height = margin_top + margin_bottom + len(dna_barcode_list) * (text_height + line_spacing)
 
-    # 创建空白图片
     img = Image.new('RGB', (img_width, img_height), color='white')
     draw = ImageDraw.Draw(img)
 
     y = margin_top
-    # 遍历每一行 DNA 序列
+
     for i, line in enumerate(dna_barcode_list):
-        # 将 DNA 序列按每5个字符切分为一个 token
         tokens = [line[j:j+5] for j in range(0, len(line), 5)]
-        # 对应这一行的 token attention score 列表
         token_masks = mask_list[i]
         x = margin_left
         for token, att in zip(tokens, token_masks):
-            # token 宽度按字符宽度计算
             token_width = text_width * len(token)
-            # 利用 attention score 计算背景颜色，使用白到红的渐变：
-            # 当 att = 0, 颜色 = (255,255,255); att = 1, 颜色 = (255,0,0)
             r = 255
             g = int(255 * (1 - att))
             b = int(255 * (1 - att))
             bg_color = (r, g, b)
-            # 绘制 token 背景矩形
             draw.rectangle([x, y, x + token_width, y + text_height], fill=bg_color)
-            # 绘制 token 文本，使用黑色
             draw.text((x, y), token, fill=(0, 0, 0), font=font)
-            x += token_width  # 下一个 token 的起始 x 坐标
+            x += token_width
         y += text_height + line_spacing
 
     os.makedirs(save_path, exist_ok=True)
