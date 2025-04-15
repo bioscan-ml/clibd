@@ -1,41 +1,49 @@
-import io
+import gc
 import os
-import cv2
+import random
+
 import h5py
 import hydra
 import numpy as np
 import torch
+from PIL import Image, ImageDraw, ImageFont
 from omegaconf import DictConfig
 from tqdm import tqdm
-import gc
-from bioscanclip.model.simple_clip import load_clip_model
+
 from bioscanclip.model.dna_encoder import get_sequence_pipeline
+from bioscanclip.model.simple_clip import load_clip_model
 from bioscanclip.util.dataset import tokenize_dna_sequence
-from PIL import Image, ImageDraw, ImageFont
-import random
+from bioscanclip.util.util import update_checkpoint_param_names
+
+
 
 # Reference and modified fromhttps://github.com/jacobgil/vit-explain
 
 
-def get_attention_mask(dna_list, dna_tokens_list, attn_rollout, device, layer_idx=None,
-                                  folder_name="representation_visualization/before_contrastive_learning"):
+def get_attention_mask(top_order_barcodes, top_order_tokens, attn_rollout, device, layer_idx=None,
+                       folder_name="representation_visualization/before_contrastive_learning"):
     os.makedirs(folder_name, exist_ok=True)
-    mask_list = []
 
-    for idx, tokens in tqdm(enumerate(dna_tokens_list), total=len(dna_tokens_list)):
-        with torch.no_grad():
-            tokens = torch.tensor(tokens).unsqueeze(0).to(device)
-            mask = attn_rollout(tokens, layer_idx=layer_idx)
-            # normalize mask
-            mask = mask / np.max(mask)
-            mask_list.append(mask)
+    top_order_attention_masks = {}
+
+    for order, tokens_list in top_order_tokens.items():
+        order_masks = []
+        for tokens in tqdm(tokens_list, desc=f"Processing order {order}", total=len(tokens_list)):
+            with torch.no_grad():
+                tokens_tensor = torch.tensor(tokens).unsqueeze(0).to(device)
+                mask = attn_rollout(tokens_tensor, layer_idx=layer_idx)
+                mask = mask / np.max(mask)
+                order_masks.append(mask)
+        top_order_attention_masks[order] = order_masks
+
     attn_rollout.remove_hooks()
     torch.cuda.empty_cache()
     gc.collect()
-    return mask_list
+
+    return top_order_attention_masks
+
 
 def rollout(attentions, discard_ratio, head_fusion="max", layer_idx=None):
-
     result = torch.eye(attentions[0].size(-1))
 
     if layer_idx is None:
@@ -76,6 +84,7 @@ def rollout(attentions, discard_ratio, head_fusion="max", layer_idx=None):
     mask = mask / np.max(mask)
     return mask
 
+
 class BarcodeBERTAttentionRollout:
     def __init__(self, model, attention_layer_name='attention.self.dropout', head_fusion="min",
                  discard_ratio=0.9):
@@ -112,24 +121,39 @@ class BarcodeBERTAttentionRollout:
         self.hooks = []
 
 
-def get_some_dna_from_hdf5(hdf5_group, n=None):
-    dna_list = []
-    total = len(hdf5_group["barcode"])
-    if n is None or n > total:
-        n = total
+def get_top5_orders_dna_barcodes(hdf5_group, n_order=5, n_sample=10):
+    orders_data = hdf5_group["order"][...]
+    barcodes_data = hdf5_group["barcode"][...]
 
-    indices = random.sample(range(total), n)
+    orders = [o.decode("utf-8") if isinstance(o, bytes) else o for o in orders_data]
+    barcodes = [b.decode("utf-8") if isinstance(b, bytes) else b for b in barcodes_data]
 
-    for idx in indices:
-        dna_barcode = hdf5_group["barcode"][idx].decode("utf-8")
-        dna_list.append(dna_barcode)
+    order_to_indices = {}
+    for idx, order in enumerate(orders):
+        order_to_indices.setdefault(order, []).append(idx)
+
+    sorted_orders = sorted(order_to_indices.keys(), key=lambda key: len(order_to_indices[key]), reverse=True)
+    top_orders = sorted_orders[:n_order]
+
+    top_order_barcodes = {}
+    top_order_tokens = {}
 
     sequence_pipeline = get_sequence_pipeline()
-    unprocessed_dna_barcode = np.array(dna_list)
-    dna_tokens_list = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode)
-    return dna_list, dna_tokens_list
 
-def draw_dna_barcode(dna_barcode_list, mask_list, save_path):
+    for order in top_orders:
+        indices = order_to_indices[order]
+        sample_size = min(n_sample, len(indices))
+        selected_indices = random.sample(indices, sample_size)
+        selected_barcodes = [barcodes[i] for i in selected_indices]
+        top_order_barcodes[order] = selected_barcodes
+        unprocessed_dna_barcode = np.array(selected_barcodes)
+        tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode)
+        top_order_tokens[order] = tokens
+
+    return top_order_barcodes, top_order_tokens
+
+
+def draw_dna_barcode(top_order_barcodes, top_order_attention_masks, save_path):
 
     font = ImageFont.load_default()
     bbox = font.getbbox("A")
@@ -137,35 +161,75 @@ def draw_dna_barcode(dna_barcode_list, mask_list, save_path):
     text_height = bbox[3] - bbox[1]
     line_spacing = 5
 
+    try:
+        order_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+    except IOError:
+        order_font = ImageFont.load_default()
+
     margin_top = 10
     margin_bottom = 10
     margin_left = 10
-    img_width = 4200
-    img_height = margin_top + margin_bottom + len(dna_barcode_list) * (text_height + line_spacing)
 
-    img = Image.new('RGB', (img_width, img_height), color='white')
+    name_col_width = 200
+    barcode_area_width = 3800
+    total_width = margin_left + name_col_width + barcode_area_width + margin_left
+
+    total_rows = 0
+    for order in top_order_barcodes:
+        total_rows += len(top_order_barcodes[order])
+    n_groups = len(top_order_barcodes)
+    separator_height = 5
+
+    total_height = (margin_top + margin_bottom +
+                    total_rows * (text_height + line_spacing) +
+                    (n_groups - 1) * separator_height)
+
+    img = Image.new('RGB', (total_width, total_height), color='white')
     draw = ImageDraw.Draw(img)
 
     y = margin_top
 
-    for i, line in enumerate(dna_barcode_list):
-        tokens = [line[j:j+5] for j in range(0, len(line), 5)]
-        token_masks = mask_list[i]
-        x = margin_left
-        for token, att in zip(tokens, token_masks):
-            token_width = text_width * len(token)
-            r = 255
-            g = int(255 * (1 - att))
-            b = int(255 * (1 - att))
-            bg_color = (r, g, b)
-            draw.rectangle([x, y, x + token_width, y + text_height], fill=bg_color)
-            draw.text((x, y), token, fill=(0, 0, 0), font=font)
-            x += token_width
-        y += text_height + line_spacing
+    for order in top_order_barcodes:
+        barcodes_list = top_order_barcodes[order]
+        masks_list = top_order_attention_masks[order]
+        group_start_y = y
+
+        for i, barcode in enumerate(barcodes_list):
+            tokens = [barcode[j:j + 5] for j in range(0, len(barcode), 5)]
+            token_masks = masks_list[i]
+
+            x = margin_left + name_col_width
+            for token, att in zip(tokens, token_masks):
+                token_width = text_width * len(token)
+                r = 255
+                g = int(255 * (1 - att))
+                b = int(255 * (1 - att))
+                bg_color = (r, g, b)
+                draw.rectangle([x, y, x + token_width, y + text_height], fill=bg_color)
+                draw.text((x, y), token, fill=(0, 0, 0), font=font)
+                x += token_width
+            y += text_height + line_spacing
+
+        group_end_y = y - line_spacing
+        center_y = (group_start_y + group_end_y) // 2
+
+        order_text = order
+        order_bbox = order_font.getbbox(order_text)
+        order_text_width = order_bbox[2] - order_bbox[0]
+        order_text_height = order_bbox[3] - order_bbox[1]
+        order_x = margin_left + (name_col_width - order_text_width) // 2
+        order_y = center_y - order_text_height // 2
+        draw.text((order_x, order_y), order_text, fill=(0, 0, 0), font=order_font)
+
+        if y + separator_height < total_height:
+            draw.rectangle([margin_left, y, total_width - margin_left, y + separator_height],
+                           fill=(0, 0, 0))
+            y += separator_height
 
     os.makedirs(save_path, exist_ok=True)
     img.show()
     img.save(os.path.join(save_path, "sample_dna_barcode.png"))
+
 
 @hydra.main(config_path="../../../bioscanclip/config", config_name="global_config", version_base="1.1")
 def main(args: DictConfig) -> None:
@@ -183,8 +247,7 @@ def main(args: DictConfig) -> None:
         # For now just use train_seen data
         hdf5_group = hdf5_file["train_seen"]
         # Load some dna barcode and processed tokens.
-        dna_list, dna_tokens_list = get_some_dna_from_hdf5(hdf5_group, n=50)
-
+        top_order_barcodes, top_order_tokens = get_top5_orders_dna_barcodes(hdf5_group, n_order=5, n_sample=10)
 
     print("Initialize model...")
     model = load_clip_model(args, device)
@@ -198,8 +261,6 @@ def main(args: DictConfig) -> None:
     # print(dna_encoder)
     print(dna_encoder)
 
-    # draw_dna_barcode(dna_list, dna_tokens_list, save_path)
-
     for single_layer in dna_encoder.base_dna_encoder.bert.encoder.layer:
         single_layer.attention.self.fused_attn = False
         # single_layer.attention.fused_attn = False
@@ -207,15 +268,16 @@ def main(args: DictConfig) -> None:
     print("Before contrastive learning")
     attn_rollout = BarcodeBERTAttentionRollout(dna_encoder, attention_layer_name='attention.self.dropout',
                                                head_fusion="max", )
-    attention_mask_list = get_attention_mask(dna_list, dna_tokens_list, attn_rollout, device)
+    top_order_attention_masks = get_attention_mask(top_order_barcodes, top_order_tokens, attn_rollout, device)
 
-    draw_dna_barcode(dna_list, attention_mask_list, save_path)
+    draw_dna_barcode(top_order_barcodes, top_order_attention_masks, save_path)
 
     print("After contrastive learning")
     if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
         pass
     else:
         checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
+        checkpoint = update_checkpoint_param_names(checkpoint)
         model.load_state_dict(checkpoint)
 
     model.eval()
@@ -228,8 +290,8 @@ def main(args: DictConfig) -> None:
         # single_layer.attention.fused_attn = False
     attn_rollout = BarcodeBERTAttentionRollout(dna_encoder, attention_layer_name='attention.self.dropout',
                                                head_fusion="max", )
-    attention_mask_list = get_attention_mask(dna_list, dna_tokens_list, attn_rollout, device)
-    draw_dna_barcode(dna_list, attention_mask_list, save_path)
+    top_order_attention_masks = get_attention_mask(top_order_barcodes, top_order_tokens, attn_rollout, device)
+    draw_dna_barcode(top_order_barcodes, top_order_attention_masks, save_path)
 
 
 if __name__ == "__main__":
