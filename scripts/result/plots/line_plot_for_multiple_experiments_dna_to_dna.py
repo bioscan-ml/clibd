@@ -6,6 +6,9 @@ yellow = "#FFBE7A"
 red = "#FA7F6F"
 blue = "#82B0D2"
 
+font_size_a = 22
+font_size_b = 16
+
 x = np.arange(4)
 labels = ['order', 'family', 'genus', 'species']
 
@@ -36,20 +39,20 @@ i_d_image_to_dna_unseen = [71.8, 44.6, 18.7, 7.7]
 
 
 fig, ax = plt.subplots(figsize=(6, 4))
-ax.plot(x, baseline_dna_to_dna_seen, 'o-', color=red)
-ax.plot(x, baseline_dna_to_dna_unseen, 'o--', color=red)
-ax.plot(x, i_d_dna_to_dna_seen, 'o-', color=yellow)
-ax.plot(x, i_d_dna_to_dna_unseen, 'o--', color=yellow)
-ax.plot(x, i_d_t_dna_to_dna_seen, 'o-', color=blue)
-ax.plot(x, i_d_t_dna_to_dna_unseen, 'o--', color=blue)
+ax.plot(x, baseline_dna_to_dna_seen, 'o-', color=red, linewidth=5)
+ax.plot(x, baseline_dna_to_dna_unseen, 'o--', color=red, linewidth=5)
+ax.plot(x, i_d_dna_to_dna_seen, 'o-', color=yellow, linewidth=5)
+ax.plot(x, i_d_dna_to_dna_unseen, 'o--', color=yellow, linewidth=5)
+ax.plot(x, i_d_t_dna_to_dna_seen, 'o-', color=blue, linewidth=5)
+ax.plot(x, i_d_t_dna_to_dna_unseen, 'o--', color=blue, linewidth=5)
 
 ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.set_ylim(0, 100)
-ax.tick_params(axis='both', which='major', labelsize=12)
-ax.set_xlabel('Taxonomic Rank', fontsize=16)
-ax.set_ylabel('Macro-accuracy (%)', fontsize=16)
-ax.set_title('DNA to DNA', fontsize=16)
+ax.tick_params(axis='both', which='major', labelsize=font_size_b)
+# ax.set_xlabel('Taxonomic Rank', fontsize=font_size_a)
+ax.set_ylabel('Macro-accuracy (%)', fontsize=font_size_a)
+ax.set_title('DNA to DNA', fontsize=font_size_a)
 
 for y in np.arange(0, 101, 5):
     if y % 10 == 0:
@@ -58,18 +61,18 @@ for y in np.arange(0, 101, 5):
         ax.axhline(y=y, color='grey', linewidth=0.2, linestyle='-')
 
 method_handles = [
-    Line2D([0], [0], color=red, lw=2, label='No align'),
-    Line2D([0], [0], color=yellow, lw=2, label='Image + DNA'),
-    Line2D([0], [0], color=blue, lw=2, label='Image + DNA + Taxonomy')
+    Line2D([0], [0], color=red, lw=2, label='No align', linewidth=5),
+    Line2D([0], [0], color=yellow, lw=2, label='Image + DNA', linewidth=5),
+    Line2D([0], [0], color=blue, lw=2, label='Image + DNA + Taxonomy', linewidth=5)
 ]
 style_handles = [
-    Line2D([0], [0], color='black', lw=2, linestyle='-', label='Seen'),
-    Line2D([0], [0], color='black', lw=2, linestyle='--', label='Unseen')
+    Line2D([0], [0], color='black', lw=2, linestyle='-', label='Seen', linewidth=5),
+    Line2D([0], [0], color='black', lw=2, linestyle='--', label='Unseen', linewidth=5)
 ]
 
 legend1 = ax.legend(handles=method_handles, loc='lower left', bbox_to_anchor=(0, 0))
 ax.add_artist(legend1)
-legend2 = ax.legend(handles=style_handles, loc='lower left', bbox_to_anchor=(0.48, 0))
+legend2 = ax.legend(handles=style_handles, loc='lower left', bbox_to_anchor=(0.51, 0))
 plt.tight_layout()
 # plt.show()
 plt.savefig('dna_to_dna.png', dpi=300, bbox_inches='tight')
