@@ -28,10 +28,12 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
         optimizer.zero_grad()
         image_input_batch = image_input_batch.to(device)
 
+        # TODO: move this part to simple_clip.py
         if isinstance(dna_input_batch, torch.Tensor):
             dna_input_batch = dna_input_batch.to(device)
         # if dna_input_batch is not a tensor, tokenize it
         else:
+            print("dna_input_batch is not a tensor, tokenizing it")
             tokenized_dna_sequences = []
             for dna_seq in dna_input_batch:
                 tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=133, return_tensors="pt")

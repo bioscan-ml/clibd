@@ -414,18 +414,25 @@ def construct_dataloader(
         dna_type = args.model_config.dna.input_type
 
     if dna_type == "sequence":
-        if hasattr(args.model_config, "pre_train_for_barcode_bert") and (args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
+        # Load the HDF5 file
+        if args.model_config.dataset == "bioscan_5m":
+            if hasattr(args.model_config, "train_with_small_subset") and args.model_config.train_with_small_subset:
+                hdf5_file = h5py.File(args.bioscan_5m_data.path_to_smaller_hdf5_data, "r", libver="latest")
+            else:
+                hdf5_file = h5py.File(args.bioscan_5m_data.path_to_hdf5_data, "r", libver="latest")
+        else:
+            hdf5_file = h5py.File(args.bioscan_data.path_to_hdf5_data, "r", libver="latest")
+
+        # Decode barcodes
+        unprocessed_dna_barcode = np.array([item.decode("utf-8") for item in hdf5_file[split]["barcode"][:]])
+        
+        # Then handle tokenization based on config
+        if hasattr(args.model_config, "pre_train_for_barcode_bert") and (
+            args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or 
+            args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
+            # curr_dna_input = self.hdf5_split_group["barcode"][idx].decode("utf-8")
             pass
         else:
-
-            if args.model_config.dataset == "bioscan_5m":
-                if hasattr(args.model_config, "train_with_small_subset") and args.model_config.train_with_small_subset:
-                    hdf5_file = h5py.File(args.bioscan_5m_data.path_to_smaller_hdf5_data, "r", libver="latest")
-                else:
-                    hdf5_file = h5py.File(args.bioscan_5m_data.path_to_hdf5_data, "r", libver="latest")
-            else:
-                hdf5_file = h5py.File(args.bioscan_data.path_to_hdf5_data, "r", libver="latest")
-            unprocessed_dna_barcode = np.array([item.decode("utf-8") for item in hdf5_file[split]["barcode"][:]])
             barcode_bert_dna_tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode)
 
     dataset = Dataset_for_CL(
