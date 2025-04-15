@@ -91,8 +91,6 @@ def save_paired_failure_cases(
             if seen_gt_species != seen_pred_species:
                 # load the images of the gt and pred
                 gt_image_id = seen_dict["processed_id_list"][idx]
-                # import pdb; pdb.set_trace()
-                # exit()
                 pred_image_id = keys_dict["processed_id_list"][seen_pred_index_list[idx][0]]
 
                 gt_image = load_image_from_hdf5_with_id_as_input(args, gt_image_id, id_to_split_and_position)

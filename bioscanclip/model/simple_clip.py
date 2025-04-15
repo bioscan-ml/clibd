@@ -2,9 +2,9 @@ import torch.nn.functional as F
 import timm
 import torch.nn as nn
 from bioscanclip.model.mlp import MLPEncoder
-from bioscanclip.model.image_encoder import LoRA_ViT_timm, LoRA_ViT_OpenCLIP
-from bioscanclip.model.dna_encoder import load_pre_trained_bioscan_bert, LoRA_barcode_bert, Freeze_DNA_Encoder
-from bioscanclip.model.language_encoder import load_pre_trained_bert, LoRA_bert, LoRA_bert_OpenCLIP
+from bioscanclip.model.image_encoder import CLIBDImageEncoder
+from bioscanclip.model.dna_encoder import load_pre_trained_bioscan_bert, CLIBDDNAEncoder
+from bioscanclip.model.language_encoder import load_pre_trained_bert, CLIBDLanguageEncoder
 from bioscanclip.util.util import add_lora_layer_to_open_clip
 import numpy as np
 from typing import Optional
@@ -159,11 +159,11 @@ def load_clip_model(args, device=None):
                 torch.cuda.empty_cache()
                 print("Loaded image encoder from %s" % image_encoder_trained_with_simclr_style_ckpt_path)
             if disable_lora:
-                image_encoder = LoRA_ViT_timm(vit_model=pre_trained_timm_vit, r=4,
-                                              num_classes=args.model_config.output_dim, lora_layer=[])
+                image_encoder = CLIBDImageEncoder(vit_model=pre_trained_timm_vit, r=4,
+                                                  num_classes=args.model_config.output_dim, lora_layer=[])
             else:
-                image_encoder = LoRA_ViT_timm(vit_model=pre_trained_timm_vit, r=4,
-                                              num_classes=args.model_config.output_dim)
+                image_encoder = CLIBDImageEncoder(vit_model=pre_trained_timm_vit, r=4,
+                                                  num_classes=args.model_config.output_dim)
         else:
             image_encoder = MLPEncoder(input_dim=args.model_config.image.input_dim,
                                        hidden_dim=args.model_config.image.hidden_dim,
@@ -177,10 +177,10 @@ def load_clip_model(args, device=None):
                     language_model_name = args.model_config.language.pre_train_model
                 _, pre_trained_bert = load_pre_trained_bert(language_model_name)
                 if disable_lora:
-                    language_encoder = LoRA_bert(model=pre_trained_bert, r=4, num_classes=args.model_config.output_dim,
-                                                 lora_layer=[])
+                    language_encoder = CLIBDLanguageEncoder(model=pre_trained_bert, r=4, num_classes=args.model_config.output_dim,
+                                                            lora_layer=[])
                 else:
-                    language_encoder = LoRA_bert(model=pre_trained_bert, r=4, num_classes=args.model_config.output_dim)
+                    language_encoder = CLIBDLanguageEncoder(model=pre_trained_bert, r=4, num_classes=args.model_config.output_dim)
             else:
                 raise TypeError(f"Using {args.model_config.language.input_type} as language input is not support yet.")
 
@@ -189,14 +189,21 @@ def load_clip_model(args, device=None):
     if hasattr(args.model_config, 'dna'):
         if args.model_config.dna.input_type == "sequence":
             if dna_model == "barcode_bert" or dna_model == "lora_barcode_bert":
+                barcode_bert_ckpt = args.bioscan_bert_checkpoint
+
+                if hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M":
+                    barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_bioscan_5_m
+                elif hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "CANADA-1M":
+                    barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_canada_1_5_m
+
                 pre_trained_barcode_bert = load_pre_trained_bioscan_bert(
-                    bioscan_bert_checkpoint=args.bioscan_bert_checkpoint)
+                    bioscan_bert_checkpoint=barcode_bert_ckpt)
                 if disable_lora:
-                    dna_encoder = LoRA_barcode_bert(model=pre_trained_barcode_bert, r=4,
-                                                    num_classes=args.model_config.output_dim, lora_layer=[])
+                    dna_encoder = CLIBDDNAEncoder(model=pre_trained_barcode_bert, r=4,
+                                                  num_classes=args.model_config.output_dim, lora_layer=[])
                 else:
-                    dna_encoder = LoRA_barcode_bert(model=pre_trained_barcode_bert, r=4,
-                                                    num_classes=args.model_config.output_dim)
+                    dna_encoder = CLIBDDNAEncoder(model=pre_trained_barcode_bert, r=4,
+                                                  num_classes=args.model_config.output_dim)
         else:
             dna_encoder = MLPEncoder(input_dim=args.model_config.dna.input_dim,
                                      hidden_dim=args.model_config.dna.hidden_dim,

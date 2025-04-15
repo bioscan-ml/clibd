@@ -1,21 +1,20 @@
 batch_size: 500
-epochs: 30
+epochs: 20
 labels_for_driven_positive_and_negative_pairs:
-wandb_project_name: BIOSCAN-CLIP-uni-model-image
+wandb_project_name: BIOSCAN-CLIP-uni-model-image-5m
 using_train_seen_for_pre_train: true
-dataset: bioscan_1m
+dataset: bioscan_5m
 
 image:
   model: vit
 
-model_output_name: image_simclr_style_bioscan_1m
+model_output_name: image_simclr_style_bioscan_5m
 port: 29531
 
 ckpt_path: ${project_root_path}/ckpt/uni_model/uni_model/image/${model_config.model_output_name}/model_best.pth.tar
 
 output_dim: 768
 
-#
 #lr_scheduler: one_cycle
 lr_config:
   lr: 1e-6

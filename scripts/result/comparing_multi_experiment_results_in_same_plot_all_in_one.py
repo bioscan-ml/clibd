@@ -126,7 +126,6 @@ def get_acc_list_with_type_and_query_and_key(acc_dict, acc_type, seen_or_unseen,
                     acc_list.append(acc_dict[model_name][query][key][split][acc_type]['1'][level])
                 except:
                     print(f"Error in getting acc for {model_name} {query} {key} {split} {acc_type} {level}")
-                    import pdb; pdb.set_trace()
 
 
     return acc_list

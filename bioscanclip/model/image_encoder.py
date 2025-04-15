@@ -48,9 +48,9 @@ class _LoRA_qkv_timm(nn.Module):
         return qkv
 
 
-class LoRA_ViT_timm(nn.Module):
+class CLIBDImageEncoder(nn.Module):
     def __init__(self, vit_model: VisionTransformer, r: int, num_classes: int = 0, lora_layer=None):
-        super(LoRA_ViT_timm, self).__init__()
+        super(CLIBDImageEncoder, self).__init__()
 
         assert r > 0
         if lora_layer:
@@ -90,14 +90,14 @@ class LoRA_ViT_timm(nn.Module):
                 w_b_linear_v,
             )
         self.reset_parameters()
-        self.lora_vit = vit_model
+        self.base_image_encoder = vit_model
         if num_classes > 0:
-            self.lora_vit.reset_classifier(num_classes=num_classes)
+            self.base_image_encoder.reset_classifier(num_classes=num_classes)
             # self.lora_vit.head = nn.Linear(
             #     self.dim, num_classes)
 
     def reset_classifier(self, num_classes):
-        self.lora_vit.reset_classifier(num_classes=num_classes)
+        self.base_image_encoder.reset_classifier(num_classes=num_classes)
 
     def reset_parameters(self) -> None:
         for w_A in self.w_As:
@@ -106,7 +106,7 @@ class LoRA_ViT_timm(nn.Module):
             nn.init.zeros_(w_B.weight)
 
     def forward(self, x: Tensor) -> Tensor:
-        return self.lora_vit(x)
+        return self.base_image_encoder(x)
 
 
 

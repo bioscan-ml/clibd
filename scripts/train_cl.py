@@ -288,6 +288,7 @@ def main_process(rank: int, world_size: int, args):
         if (epoch % args.model_config.evaluation_period == 0 or epoch == args.model_config.epochs - 1) and rank == 0 and epoch > eval_skip_epoch:
             original_model = model.module if hasattr(model, 'module') else model
             if args.save_ckpt:
+                print(f'Saving ckpt at epoch {epoch}')
                 last_ckpt_path = os.path.join(folder_path, f'last.pth')
                 torch.save(original_model.state_dict(), last_ckpt_path)
                 print(f'Last ckpt: {last_ckpt_path}')

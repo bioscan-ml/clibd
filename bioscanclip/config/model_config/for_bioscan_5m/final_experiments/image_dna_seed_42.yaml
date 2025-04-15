@@ -15,6 +15,7 @@ dna:
 model_output_name: image_dna_4gpu
 evaluation_period: 1
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna/best.pth
+hf_model_name: ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna/best.pth
 output_dim: 768
 port: 29531
 

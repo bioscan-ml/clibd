@@ -1,26 +1,24 @@
 batch_size: 500
-epochs: 20
+epochs: 30
 labels_for_driven_positive_and_negative_pairs:
-wandb_project_name: BIOSCAN-CLIP-5M
+wandb_project_name: BIOSCAN-CLIP
 using_train_seen_for_pre_train: true
-dataset: bioscan_5m
+dataset: bioscan_1m
 
 image:
   input_type: image
-  pre_train_model: vit_base_patch16_224
+  model: lora_vit
 dna:
   input_type: sequence
-  pre_train_model: barcode_bert
+  model: lora_barcode_bert
 language:
   input_type: sequence
-  pre_train_model: prajjwal1/bert-small
+  model: lora_bert
 
-model_output_name: image_dna_text_4gpu
+load_ckpt: false
+model_output_name: no_align_baseline
 evaluation_period: 1
-
-barcodeBERT_ckpt_path: ${project_root_path}/ckpt/BarcodeBERT/trained_with_5m/BIOSCAN-5M-BEST_k4_6_6_w1_m0_r0.pt
-
-ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text/best.pth
+ckpt_path: ${project_root_path}/ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch/best.pth
 output_dim: 768
 port: 29531
 
@@ -40,7 +38,7 @@ amp: true
 
 random_seed: false
 
-eval_skip_epoch: 10
+eval_skip_epoch: 23
 
 default_seed: 42
 

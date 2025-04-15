@@ -17,7 +17,8 @@ from omegaconf import DictConfig, OmegaConf
 import h5py
 from PIL import Image
 import io
-# from huggingface_hub import hf_hub_download
+from itertools import product
+from torchtext.vocab import vocab as build_vocab_from_dict
 
 
 LEVELS = ["order", "family", "genus", "species"]
@@ -95,6 +96,34 @@ class KmerTokenizer(object):
             k_mer = dna_sequence[i : i + self.k]
             tokens.append(k_mer)
         return tokens
+
+
+class NewKmerTokenizer(object):
+    def __init__(self, k, vocabulary_mapper, stride=1, padding=False, max_len=660):
+        self.k = k
+        self.stride = stride
+        self.padding = padding
+        self.max_len = max_len
+        self.vocabulary_mapper = vocabulary_mapper
+
+    def __call__(self, dna_sequence, offset=0):
+        tokens = []
+        att_mask = [1] * (self.max_len // self.stride)
+        x = dna_sequence[offset:]
+        if self.padding:
+            if len(x) > self.max_len:
+                x = x[: self.max_len]
+            else:
+                att_mask[len(x) // self.stride :] = [0] * (len(att_mask) - len(x) // self.stride)
+                x = x + "N" * (self.max_len - len(x))
+        for i in range(0, len(x) - self.k + 1, self.stride):
+            k_mer = x[i : i + self.k]
+            tokens.append(k_mer)
+
+        tokens = torch.tensor(self.vocabulary_mapper(tokens), dtype=torch.int64)
+        att_mask = torch.tensor(att_mask, dtype=torch.int32)
+
+        return tokens, att_mask
 
 
 def set_seed(seed=None):
@@ -190,13 +219,6 @@ def tokenize_dna_sequence(curr_dna_input, sequence_pipeline):
     curr_dna_input = tokenize_dna_sequence(sequence_pipeline, np.array(curr_dna_input))
     return curr_dna_input
 
-
-def load_small_species(args):
-    small_species_list = None
-    if hasattr(args.bioscan_data, "path_to_small_species_list_json"):
-        with open(args.bioscan_data.path_to_small_species_list_json, "r") as json_file:
-            small_species_list = json.load(json_file)
-    return small_species_list
 
 
 def find_k_closest_records(
@@ -418,8 +440,10 @@ def print_micro_and_macro_acc(acc_dict, k_list, args):
                 return model_config[key].pre_train_model
         else:
             return "None"
-
-    row_for_csv_data = ['LoRA', alignment]
+        
+    learning_strategy = "FineTuning" if hasattr(model_config, "disable_lora") and model_config.disable_lora else "LoRA"
+    
+    row_for_csv_data = [learning_strategy, alignment]
     row_for_csv_data.append(read_encoder(model_config, "dna"))
     row_for_csv_data.append(read_encoder(model_config, "image"))
     row_for_csv_data.append(read_encoder(model_config, "language"))
@@ -814,6 +838,38 @@ def remove_module_from_state_dict(state_dict):
         new_state_dict[key.replace("module.", "")] = value
     return new_state_dict
 
+def load_kmer_tokenizer(args, k=4):
+    base_pairs = "ACGT"
+    tokenize_n_nucleotide = False
+    special_tokens = ["[MASK]", "[UNK]"] 
+    UNK_TOKEN = "[UNK]"
+    stride = 1
+    max_len = 660
+    
+    k_mer = k
+    kmers = ["".join(kmer) for kmer in product(base_pairs, repeat=k_mer)]
+
+    if tokenize_n_nucleotide:
+        prediction_kmers = []
+        other_kmers = []
+        for kmer in kmers:
+            if "N" in kmer:
+                other_kmers.append(kmer)
+            else:
+                prediction_kmers.append(kmer)
+
+        kmers = prediction_kmers + other_kmers
+
+    kmer_dict = dict.fromkeys(kmers, 1)
+    vocab = build_vocab_from_dict(kmer_dict, specials=special_tokens)
+    vocab.set_default_index(vocab[UNK_TOKEN])
+    vocab_size = len(vocab)
+    tokenizer = KmerTokenizer(
+        k_mer, vocab, stride=stride, padding=True, max_len=max_len
+    )
+
+    return tokenizer
+
 class TensorResizeLongEdge(object):
     def __init__(self, long_edge_size, interpolation_mode='bilinear'):
         self.long_edge_size = long_edge_size
@@ -855,3 +911,30 @@ class PadTo224Tensor(object):
 
     def __repr__(self):
         return f"{self.__class__.__name__}(target_size={self.target_size}, fill={self.fill})"
+
+
+def update_checkpoint_param_names(checkpoint):
+    """
+    This function takes a model as input and returns a dictionary that maps the parameter names of the model to their
+    corresponding indices in the state_dict.
+    """
+
+    param_name_mapping = {
+        "LoRA_barcode_bert": "CLIBDDNAEncoder",
+        "lora_barcode_bert": "base_dna_encoder",
+        "LoRA_ViT_timm": "CLIBDImageEncoder",
+        "lora_vit": "base_image_encoder",
+        "LoRA_bert": "CLIBDLanguageEncoder",
+        "lora_bert": "base_language_encoder",
+    }
+
+    new_checkpoint = {}
+
+    for name, tensor in checkpoint.items():
+        new_name = name
+        for key, value in param_name_mapping.items():
+            if key in new_name:
+                new_name = new_name.replace(key, value)
+        new_checkpoint[new_name] = tensor
+
+    return new_checkpoint

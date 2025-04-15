@@ -170,7 +170,6 @@ def get_acc_list_with_type_and_query_and_key(acc_dict, acc_type, seen_or_unseen,
                     acc_list.append(acc_dict[model_name][query][key][split][acc_type]['1'][level] * 100)
                 except:
                     print(f"Error in getting acc for {model_name} {query} {key} {split} {acc_type} {level}")
-                    import pdb; pdb.set_trace()
 
 
     return acc_list
@@ -342,17 +341,7 @@ if __name__ == '__main__':
     acc_types = ["macro_acc", "macro_acc"]
     seen_or_unseen_list = ["seen", "unseen"]
 
-    # acc_dict_for_scott = {}
-    # for model_name in acc_dict.keys():
-    #     if model_name not in acc_dict_for_scott:
-    #         acc_dict_for_scott[model_name] = {}
-    #     for seen_or_unseen in seen_or_unseen_list:
-    #         if seen_or_unseen not in acc_dict_for_scott[model_name]:
-    #             acc_dict_for_scott[model_name][seen_or_unseen] = {}
-    #         for level in ['order', 'family', 'genus', 'species']:
-    #             acc_dict_for_scott[model_name][seen_or_unseen][level] = acc_dict[model_name][query][key][seen_or_unseen]['macro_acc']['1'][level]
-    #
-    # print(acc_dict_for_scott)
+
 
 
 

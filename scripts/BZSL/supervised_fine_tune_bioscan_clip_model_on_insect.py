@@ -43,7 +43,7 @@ def main(args: DictConfig) -> None:
     K_LIST = args.inference_and_eval_setting.k_list
 
     # Custom batch size
-    args.model_config.batch_size = args.general_fine_tune_setting.batch_size
+    args.model_config.batch_size = args.model_config.fine_tuning_set.batch_size
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -104,7 +104,7 @@ def main(args: DictConfig) -> None:
         args, world_size=None, rank=None, load_all_in_one=True)
 
     print("training...")
-    pbar = tqdm(range(args.general_fine_tune_setting.epoch))
+    pbar = tqdm(range(args.model_config.fine_tuning_set.epochs))
 
     for epoch in pbar:
         pbar.set_description(f"Epoch: {epoch}")

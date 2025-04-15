@@ -21,7 +21,6 @@ bioscan_5m_data:
   path_to_hdf5_data: ${bioscan_5m_data.dir}/BIOSCAN_5M.hdf5
   path_to_smaller_hdf5_data: ${bioscan_5m_data.dir}/BIOSCAN_5M_with_small_pre_train.hdf5
   path_to_tsv_data: ${bioscan_5m_data.dir}/BIOSCAN-5M_Dataset_v3.4.csv
-  path_to_small_species_list_json: ${bioscan_5m_data.dir}/
   path_to_id_to_position_mapping: ${bioscan_5m_data.dir}/id_to_position_mapping.json
 insect_data:
   dir: ${data_dir}/INSECT
@@ -34,14 +33,11 @@ insect_data:
   species_to_other: ${insect_data.dir}/specie_to_other_labels.json
 save_ckpt: true
 bioscan_bert_checkpoint: ${project_root_path}/ckpt/BarcodeBERT/5_mer/model_41.pth
-current_version: 0.1
 model_output_dir: ${project_root_path}/ckpt/bioscan_clip
 
 inference_and_eval_setting:
   plot_embeddings: true
   retrieve_images: false
-  query_feature_type: image
-  key_feature_type: image
   k_list: [1, 3, 5]
   levels: ['order', 'family', 'genus', 'species']
   embeddings_filters:
@@ -54,7 +50,6 @@ inference_and_eval_setting:
     seed: 413
     independent: false
     load_cached_results: false
-  put_all_key_together: false
   eval_on: test
 
 visualization:
@@ -66,5 +61,7 @@ general_fine_tune_setting:
   save_ckpt: true
   epoch: 15
   batch_size: 200
+
+hf_repo_id: bioscan-ml/clibd
 
 default_seed: 42
