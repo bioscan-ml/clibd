@@ -13,6 +13,9 @@ from omegaconf import DictConfig
 from tqdm import tqdm
 import gc
 from bioscanclip.model.simple_clip import load_clip_model
+from bioscanclip.util.util import update_checkpoint_param_names
+import matplotlib.pyplot as plt
+import random
 
 
 # Reference and modified fromhttps://github.com/jacobgil/vit-explain
@@ -20,7 +23,7 @@ def rollout(attentions, discard_ratio, head_fusion="max", layer_idx=None):
     result = torch.eye(attentions[0].size(-1))
 
     if layer_idx is None:
-        all_attentions = attentions[1:]
+        all_attentions = attentions[1:-6]
     else:
         all_attentions = attentions[layer_idx:layer_idx + 1]
         # all_attentions = attentions[0:layer_idx]+attentions[layer_idx + 1:]
@@ -100,9 +103,13 @@ def encode_all_image(image_list, model, transform, device):
 
 
 def get_some_images_from_hdf5(hdf5_group, n=None):
+    total_images = len(hdf5_group["image"])
+    if n is None:
+        n = total_images
+    indices = random.sample(range(total_images), n)
+
     image_list = []
-    if n is None: n = len(hdf5_group["image"])
-    for idx in range(n):
+    for idx in indices:
         image_enc_padded = hdf5_group["image"][idx].astype(np.uint8)
         enc_length = hdf5_group["image_mask"][idx]
         image_enc = image_enc_padded[:enc_length]
@@ -120,6 +127,7 @@ def get_image_encoder(model, device):
 
 def show_mask_on_image(img, mask):
     img = np.float32(img) / 255
+    mask = 1.0 - mask
     heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
     heatmap = np.float32(heatmap) / 255
     cam = heatmap + np.float32(img)
@@ -128,8 +136,10 @@ def show_mask_on_image(img, mask):
 
 
 def get_and_save_vit_explaination(image_list, attn_rollout, transform, device, layer_idx=None,
-                                  folder_name="representation_visualization/before_contrastive_learning"):
+                                  folder_name="representation_visualization/before_contrastive_learning", save_image=False):
     os.makedirs(folder_name, exist_ok=True)
+    output_image_list = []
+
     for idx, image in tqdm(enumerate(image_list), total=len(image_list)):
         with torch.no_grad():
             image_tensor = transform(image).unsqueeze(0).to(device)
@@ -140,14 +150,66 @@ def get_and_save_vit_explaination(image_list, attn_rollout, transform, device, l
         image_with_mask = show_mask_on_image(np_img, mask)
 
         # print(type(np_img), type(mask), type(image_with_mask))
+        # cv2.imwrite(f"{folder_name}/vit_explaination_image_with_mask_{idx}.png", image_with_mask)
+        # For image_with_mask, convert to PIL.JpegImagePlugin.JpegImageFile
+        if save_image:
+            cv2.imwrite(f"{folder_name}/vit_explaination_image_with_mask_{idx}.png", image_with_mask)
 
-        cv2.imwrite(f"{folder_name}/vit_explaination_image_with_mask_{idx}.png", image_with_mask)
+        image_with_mask = Image.fromarray(image_with_mask)
+        output_image_list.append(image_with_mask)
+
     attn_rollout.remove_hooks()
+    return output_image_list
     # torch.cuda.empty_cache()
     # gc.collect()
 
+
+def plot_figure(org_image_list, before_alignment_image_list, after_alignment_image_list):
+    image_lists = [org_image_list, before_alignment_image_list, after_alignment_image_list]
+    row_titles = ["Original", "Before alignment", "After alignment"]
+
+    target_height = 300
+
+    resized_image_lists = []
+    for img_list in image_lists:
+        new_list = []
+        for img in img_list:
+            scale_factor = target_height / img.height
+            new_width = int(img.width * scale_factor)
+            new_img = img.resize((new_width, target_height), Image.LANCZOS)
+            new_list.append(new_img)
+        resized_image_lists.append(new_list)
+
+    max_cols = max(len(lst) for lst in resized_image_lists)
+    fig, axes = plt.subplots(nrows=len(resized_image_lists), ncols=max_cols,
+                             figsize=(max_cols * 3, len(resized_image_lists) * 3))
+
+    if len(resized_image_lists) == 1:
+        axes = [axes]
+
+    for row, img_list in enumerate(resized_image_lists):
+        for col in range(max_cols):
+            ax = axes[row][col] if len(resized_image_lists) > 1 else axes[col]
+            if col < len(img_list):
+                ax.imshow(img_list[col])
+                ax.axis('off')
+            else:
+                ax.axis('off')
+        # axes[row][0].text(0.05, 0.95, row_titles[row],
+        #                   transform=axes[row][0].transAxes,
+        #                   fontsize=18, fontweight='bold', color='black',
+        #                   verticalalignment='top', horizontalalignment='left')
+
+    plt.tight_layout()
+    plt.show()
+
+
 @hydra.main(config_path="../../../bioscanclip/config", config_name="global_config", version_base="1.1")
 def main(args: DictConfig) -> None:
+    random.seed(555)
+
+    head_fusion = "max"
+
     save_path = os.path.join(args.project_root_path, "image_representation_visualization")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -170,14 +232,10 @@ def main(args: DictConfig) -> None:
         # For now just use train_seen data
         hdf5_group = hdf5_file["train_seen"]
         # Load some images from the hdf5 file
-        image_list = get_some_images_from_hdf5(hdf5_group, n=100)
+        image_list = get_some_images_from_hdf5(hdf5_group, n=6)
 
     # Save these images into a folder call "representation_visualization/original_images"
-    original_imgage_folder = os.path.join(save_path, "original_images")
-    if not os.path.exists(original_imgage_folder):
-        os.makedirs(os.path.join(save_path, "original_images"), exist_ok=True)
-        for idx, image in enumerate(image_list):
-            image.save(os.path.join(save_path, f"original_images/image_{idx}.png"))
+    print(type(image_list[0]))
 
     print("Initialize model...")
     model = load_clip_model(args, device)
@@ -188,9 +246,10 @@ def main(args: DictConfig) -> None:
         block.attn.fused_attn = False
 
     print("Before contrastive learning")
-    attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion="max")
-    get_and_save_vit_explaination(image_list, attn_rollout, transform, device,
-                                  folder_name=os.path.join(save_path, "before_contrastive_learning"))
+    attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion=head_fusion)
+    image_attn_visualization_before = get_and_save_vit_explaination(image_list, attn_rollout, transform, device,
+                                                                    folder_name=os.path.join(save_path,
+                                                                                             "before_contrastive_learning"))
 
 
 
@@ -199,6 +258,7 @@ def main(args: DictConfig) -> None:
         pass
     else:
         checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
+        checkpoint = update_checkpoint_param_names(checkpoint)
         model.load_state_dict(checkpoint)
 
     model.eval()
@@ -207,16 +267,23 @@ def main(args: DictConfig) -> None:
     for block in image_encoder.base_image_encoder.blocks:
         block.attn.fused_attn = False
 
-    attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion="max")
-    get_and_save_vit_explaination(image_list, attn_rollout, transform, device,
-                                  folder_name=os.path.join(save_path, "after_contrastive_learning"))
+    attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion=head_fusion)
+    image_attn_visualization_after = get_and_save_vit_explaination(image_list, attn_rollout, transform, device,
+                                                                   folder_name=os.path.join(save_path,
+                                                                                            "after_contrastive_learning"))
 
-    for layer_idx in range(12):
-        print(f"Layer {layer_idx}")
+    print(type(image_attn_visualization_after[0]))
 
-        attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion="max")
-        get_and_save_vit_explaination(image_list, attn_rollout, transform, device, layer_idx=layer_idx,
-                                      folder_name=os.path.join(save_path, f"single_layer/{layer_idx}"))
+    plot_figure(image_list, image_attn_visualization_before, image_attn_visualization_after)
+
+
+
+    # for layer_idx in range(12):
+    #     print(f"Layer {layer_idx}")
+    #
+    #     attn_rollout = VITAttentionRollout(image_encoder, discard_ratio=0.9, head_fusion="max")
+    #     get_and_save_vit_explaination(image_list, attn_rollout, transform, device, layer_idx=layer_idx,
+    #                                   folder_name=os.path.join(save_path, f"single_layer/{layer_idx}"), save_image=True)
 
     print(f"Done, images saved to {save_path}")
 
