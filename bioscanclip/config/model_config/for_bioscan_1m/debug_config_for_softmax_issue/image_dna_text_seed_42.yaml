@@ -27,6 +27,7 @@ lr_config:
   lr: 1e-6
   max_lr: 5e-5
 
+
 all_gather: true
 loss_setup:
   gather_with_grad: true
