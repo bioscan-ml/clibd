@@ -519,75 +519,60 @@ class BatchKmerTokenizer:
 
 class BatchCascadeTokenizer:
     """
-    结合了 BatchKmerTokenizer 批处理能力和 KmerCascadeCache 多级缓存优势的高效实现
     """
     
     def __init__(self, base_tokenizer=None, batch_size=128):
         self.tokenizer = base_tokenizer
         self.batch_size = batch_size
         
-        # 从基础分词器提取参数
         self.k = base_tokenizer.k
         self.stride = base_tokenizer.stride
         self.max_len = base_tokenizer.max_len
         self.vocab_dict = base_tokenizer.vocab_dict
         self.unk_token_id = self.vocab_dict.get("[UNK]", 1)
         
-        # 统计计数
         self.process_count = 0
         self.batch_count = 0
         
-        # 主缓存字典 - 存储完整处理结果
         self.cache = {}
         self.cache_hits = 0
         self.cache_misses = 0
         
-        # 批处理结果缓存 - 为常见的批处理操作缓存结果
         self.batch_cache = {}
         self.batch_cache_hits = 0
         self.batch_cache_misses = 0
         
-    # 子序列缓存 - 使用函数装饰器进行自动缓存
     @functools.lru_cache(maxsize=16384)
     def _tokenize_subsequence(self, seq):
-        """缓存子序列的分词结果"""
         if len(seq) < self.k:
             return []
             
-        # 直接提取 k-mers
         tokens = [seq[i:i + self.k] for i in range(0, len(seq) - self.k + 1, self.stride)]
         
-        # 转换为 ID
         ids = [self.vocab_dict.get(token, self.unk_token_id) for token in tokens]
         
         return ids
     
     def _create_attention_mask_and_token_types(self, ids):
-        """为 ID 创建注意力掩码和token类型ID"""
         attention_mask = [1] * len(ids)
         token_type_ids = [0] * len(ids)
         return attention_mask, token_type_ids
     
     def batch_tokenize(self, texts, padding=False):
-        """一次性分词多个序列，利用缓存加速处理"""
         batch_tokens = []
         batch_ids = []
         batch_attention_masks = []
         batch_token_type_ids = []
         
-        # 处理批次中的每个序列
         for text in texts:
-            # 应用原始分词器的长度截断/填充逻辑
             if len(text) > self.max_len:
                 text = text[:self.max_len]
             if padding:
                 if len(text) < self.max_len:
                     text = text + 'N' * (self.max_len - len(text))
             
-            # 创建缓存键
             cache_key = (text, padding)
             
-            # 检查缓存
             if cache_key in self.cache:
                 self.cache_hits += 1
                 cached_result = self.cache[cache_key]
@@ -596,47 +581,37 @@ class BatchCascadeTokenizer:
                 batch_token_type_ids.append(cached_result["token_type_ids"])
                 continue
                 
-            # 缓存未命中，使用缓存子序列处理
             self.cache_misses += 1
             
-            # 短序列直接处理
             if len(text) <= 32:
                 tokens = [text[i:i + self.k] for i in range(0, len(text) - self.k + 1, self.stride)]
                 ids = [self.vocab_dict.get(token, self.unk_token_id) for token in tokens]
             else:
-                # 分割序列并处理各部分
                 ids = []
                 pos = 0
                 
                 while pos < len(text) - self.k + 1:
-                    # 尝试使用较大的缓存块
                     chunk_size = min(32, len(text) - pos)
                     chunk = text[pos:pos+chunk_size]
                     
-                    # 利用缓存处理子序列
                     chunk_ids = self._tokenize_subsequence(chunk)
                     ids.extend(chunk_ids)
                     
                     pos += chunk_size
             
-            # 创建辅助数据
             attention_mask, token_type_ids = self._create_attention_mask_and_token_types(ids)
             
-            # 添加到批处理结果
             batch_ids.append(ids)
             batch_attention_masks.append(attention_mask)
             batch_token_type_ids.append(token_type_ids)
             
-            # 存入缓存
             self.cache[cache_key] = {
                 "ids": ids,
                 "attention_mask": attention_mask,
                 "token_type_ids": token_type_ids
             }
             
-            # 限制缓存大小
             if len(self.cache) > 100000:
-                # 简单策略：删除最旧的20%条目
                 keys_to_remove = list(self.cache.keys())[:20000]
                 for k in keys_to_remove:
                     del self.cache[k]
@@ -644,50 +619,39 @@ class BatchCascadeTokenizer:
         return batch_ids, batch_attention_masks, batch_token_type_ids
     
     def __call__(self, texts, padding=False, truncation=True, max_length=660, return_tensors="pt"):
-        """支持与原始分词器相同的接口，但具有批处理和缓存能力"""
         import torch
         
-        # 处理单个文本输入
         single_input = False
         if isinstance(texts, str):
             texts = [texts]
             single_input = True
         
-        # 更新统计信息
         self.process_count += len(texts)
         self.batch_count += 1
         
-        # 检查批处理缓存
         cache_key = (tuple(texts), padding, truncation, max_length, return_tensors)
-        if len(texts) <= 10 and cache_key in self.batch_cache:  # 仅为小批次缓存完整结果
+        if len(texts) <= 10 and cache_key in self.batch_cache:  
             self.batch_cache_hits += 1
             return self.batch_cache[cache_key]
         
         self.batch_cache_misses += 1
         
-        # 一次性处理整个批次
         batch_ids, batch_attention_masks, batch_token_type_ids = self.batch_tokenize(texts, padding=padding)
         
-        # 转换为张量格式（如果需要）
         if return_tensors == "pt":
-            # 处理可变序列长度的填充
             if padding == "max_length":
-                # 确定用于填充的最大长度
                 max_len = max_length
                 
-                # 将所有序列填充到 max_length
                 padded_ids = []
                 padded_attention_masks = []
                 padded_token_type_ids = []
                 
                 for ids, mask, type_ids in zip(batch_ids, batch_attention_masks, batch_token_type_ids):
-                    # 截断（如果需要）
                     if truncation and len(ids) > max_len:
                         ids = ids[:max_len]
                         mask = mask[:max_len]
                         type_ids = type_ids[:max_len]
                     
-                    # 使用零填充
                     padding_length = max_len - len(ids)
                     if padding_length > 0:
                         ids = ids + [0] * padding_length
@@ -702,30 +666,24 @@ class BatchCascadeTokenizer:
                 batch_attention_masks = padded_attention_masks
                 batch_token_type_ids = padded_token_type_ids
             
-            # 转换为张量
             batch_ids = torch.tensor(batch_ids)
             batch_attention_masks = torch.tensor(batch_attention_masks)
             batch_token_type_ids = torch.tensor(batch_token_type_ids)
         
-        # 创建输出字典
         result = {
             "input_ids": batch_ids,
             "attention_mask": batch_attention_masks,
             "token_type_ids": batch_token_type_ids
         }
         
-        # 如果是小批次，缓存结果
         if len(texts) <= 10:
             self.batch_cache[cache_key] = result
             
-            # 限制批处理缓存大小
             if len(self.batch_cache) > 1000:
-                # 删除最旧的条目
                 keys_to_remove = list(self.batch_cache.keys())[:200]
                 for k in keys_to_remove:
                     del self.batch_cache[k]
         
-        # 根据输入类型返回单个结果或批次
         if single_input and return_tensors == "pt":
             return {
                 "input_ids": result["input_ids"][0].unsqueeze(0),
@@ -736,17 +694,14 @@ class BatchCascadeTokenizer:
         return result
     
     def process_large_dataset(self, dna_input, padding="max_length", truncation=True, max_length=660, return_tensors="pt"):
-        """处理大型数据集，按批次处理但保留单个结果"""
         import torch
         from tqdm import tqdm
         
         all_tokenized_sequences = []
         
-        # 按批次处理
         for i in tqdm(range(0, len(dna_input), self.batch_size), desc="Tokenizing DNA sequences in batches (with cascade caching)"):
             batch = dna_input[i:i+self.batch_size]
             
-            # 利用批处理和缓存能力
             batch_results = self(
                 batch, 
                 padding=padding, 
@@ -755,28 +710,23 @@ class BatchCascadeTokenizer:
                 return_tensors=return_tensors
             )
             
-            # 提取单个序列以返回
             if return_tensors == "pt":
                 for j in range(len(batch)):
-                    # 创建带有batch维度的单个序列张量
                     sequence_tensor = batch_results["input_ids"][j].unsqueeze(0)
                     all_tokenized_sequences.append(sequence_tensor)
             else:
-                # 对于非张量返回，保持列表格式
                 for j in range(len(batch)):
                     all_tokenized_sequences.append([batch_results["input_ids"][j]])
         
         return all_tokenized_sequences
     
     def get_cache_stats(self):
-        """返回缓存统计信息"""
         total = self.cache_hits + self.cache_misses
         hit_rate = self.cache_hits / total if total > 0 else 0
         
         batch_total = self.batch_cache_hits + self.batch_cache_misses
         batch_hit_rate = self.batch_cache_hits / batch_total if batch_total > 0 else 0
         
-        # 获取子序列缓存的统计信息
         subsequence_info = self._tokenize_subsequence.cache_info()
         
         return {
