@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import scipy.io as sio
 import torch
+from tqdm import tqdm
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
@@ -18,7 +19,6 @@ from transformers import AutoTokenizer
 from bioscanclip.model.language_encoder import load_pre_trained_bert
 import open_clip
 from bioscanclip.util.util import load_kmer_tokenizer, TensorResizeLongEdge
-
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -34,11 +34,27 @@ def get_label_ids(input_labels):
     return label_ids, label_to_id
 
 
-def tokenize_dna_sequence(pipeline, dna_input):
-    list_of_output = []
-    for i in dna_input:
-        list_of_output.append(pipeline(i))
-    return list_of_output
+# First modify the tokenize_dna_sequence function
+def tokenize_dna_sequence(pipeline, dna_input, use_barcode_bert_tokenizer=False):
+    if use_barcode_bert_tokenizer:
+        tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
+        tokenized_sequences = []
+        
+        for seq in tqdm(dna_input, desc="Tokenizing DNA sequences"):
+            tokenized_output = tokenizer(
+                seq, 
+                padding='max_length', 
+                truncation=True, 
+                max_length=660, 
+                return_tensors="pt")
+            input_seq = tokenized_output["input_ids"]
+            tokenized_sequences.append(input_seq)
+        return [seq.tolist() for seq in tokenized_sequences]
+    else:
+        list_of_output = []
+        for i in dna_input:
+            list_of_output.append(pipeline(i))
+        return list_of_output
 
 
 def prepare(dataset, rank, world_size, batch_size=32, pin_memory=False, num_workers=0, shuffle=False):
@@ -430,10 +446,13 @@ def construct_dataloader(
         if hasattr(args.model_config, "pre_train_for_barcode_bert") and (
             args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or 
             args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
-            # curr_dna_input = self.hdf5_split_group["barcode"][idx].decode("utf-8")
-            pass
+            use_barcode_bert_tokenizer = True
         else:
-            barcode_bert_dna_tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode)
+            use_barcode_bert_tokenizer = False
+        
+        print(f"Tokenizing DNA sequences for {split} split")
+        barcode_bert_dna_tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode, use_barcode_bert_tokenizer)
+        print(f"Tokenization complete for {split} split")
 
     dataset = Dataset_for_CL(
         args,

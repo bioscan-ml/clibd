@@ -33,13 +33,13 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
             dna_input_batch = dna_input_batch.to(device)
         # if dna_input_batch is not a tensor, tokenize it
         else:
-            print("dna_input_batch is not a tensor, tokenizing it")
-            tokenized_dna_sequences = []
-            for dna_seq in dna_input_batch:
-                tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=660, return_tensors="pt")
-                input_seq = tokenized_output["input_ids"]
-                tokenized_dna_sequences.append(input_seq)
-            dna_input_batch = torch.stack(tokenized_dna_sequences).squeeze(1).to(device)
+            print("dna_input_batch is not a tensor")
+            # tokenized_dna_sequences = []
+            # for dna_seq in tqdm(dna_input_batch, desc="Tokenizing DNA sequences"):
+            #     tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=660, return_tensors="pt")
+            #     input_seq = tokenized_output["input_ids"]
+            #     tokenized_dna_sequences.append(input_seq)
+            # dna_input_batch = torch.stack(tokenized_dna_sequences).squeeze(1).to(device)
 
         if enable_autocast:
             with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
