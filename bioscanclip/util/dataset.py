@@ -12,8 +12,8 @@ from tqdm import tqdm
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
-from bioscanclip.model.dna_encoder import get_sequence_pipeline, KmerCascadeCache, BatchKmerTokenizer
-from bioscanclip.model.dna_encoder import BatchCascadeTokenizer
+from bioscanclip.model.dna_encoder import get_sequence_pipeline
+from bioscanclip.model.dna_encoder import BatchCascadeTokenizer, KmerCascadeCache, BatchKmerTokenizer
 from torch.utils.data.distributed import DistributedSampler
 import json
 import time
@@ -41,18 +41,29 @@ def tokenize_dna_sequence(pipeline, dna_input, use_barcode_bert_tokenizer=False)
     if use_barcode_bert_tokenizer:
         tokenizer_base = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
         # tokenizer = BatchKmerTokenizer(tokenizer_base,batch_size=1024)
-        tokenizer = BatchCascadeTokenizer(tokenizer_base, batch_size=1024)
         tokenized_sequences = []
-        
-        # Process all sequences in batches but get individual results
-        tokenized_sequences = tokenizer.process_large_dataset(
-            dna_input,
-            padding='max_length', 
-            truncation=True, 
-            max_length=660, 
-            return_tensors="pt"
-        )
-        return [seq.tolist() for seq in tokenized_sequences]
+        for seq in tqdm(dna_input, desc="Tokenizing DNA sequences"):
+            tokenized_output = tokenizer_base(
+                seq, 
+                padding='max_length', 
+                truncation=True, 
+                max_length=660, 
+                return_tensors=None)
+            input_seq = tokenized_output["input_ids"]
+            tokenized_sequences.append(input_seq)
+
+        # tokenizer = BatchCascadeTokenizer(tokenizer_base, batch_size=1024)
+        # # Process all sequences in batches but get individual results
+        # tokenized_sequences = tokenizer.process_large_dataset(
+        #     dna_input,
+        #     padding='max_length', 
+        #     truncation=True, 
+        #     max_length=660, 
+        #     return_tensors="pt"
+        # )
+        # print(f"Tokenized {len(tokenized_sequences)} sequences.")
+        return tokenized_sequences
+        # return [seq.tolist() for seq in tokenized_sequences]
     else:
         list_of_output = []
         for i in tqdm(dna_input, desc="Tokenizing DNA sequences"):
