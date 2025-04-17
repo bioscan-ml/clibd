@@ -8,10 +8,12 @@ import pandas as pd
 import scipy.io as sio
 import torch
 from tqdm import tqdm
+from tqdm import tqdm
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
-from bioscanclip.model.dna_encoder import get_sequence_pipeline
+from bioscanclip.model.dna_encoder import get_sequence_pipeline, KmerCascadeCache, BatchKmerTokenizer
+from bioscanclip.model.dna_encoder import BatchCascadeTokenizer
 from torch.utils.data.distributed import DistributedSampler
 import json
 import time
@@ -37,22 +39,23 @@ def get_label_ids(input_labels):
 # First modify the tokenize_dna_sequence function
 def tokenize_dna_sequence(pipeline, dna_input, use_barcode_bert_tokenizer=False):
     if use_barcode_bert_tokenizer:
-        tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
+        tokenizer_base = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
+        # tokenizer = BatchKmerTokenizer(tokenizer_base,batch_size=1024)
+        tokenizer = BatchCascadeTokenizer(tokenizer_base, batch_size=1024)
         tokenized_sequences = []
         
-        for seq in tqdm(dna_input, desc="Tokenizing DNA sequences"):
-            tokenized_output = tokenizer(
-                seq, 
-                padding='max_length', 
-                truncation=True, 
-                max_length=660, 
-                return_tensors="pt")
-            input_seq = tokenized_output["input_ids"]
-            tokenized_sequences.append(input_seq)
+        # Process all sequences in batches but get individual results
+        tokenized_sequences = tokenizer.process_large_dataset(
+            dna_input,
+            padding='max_length', 
+            truncation=True, 
+            max_length=660, 
+            return_tensors="pt"
+        )
         return [seq.tolist() for seq in tokenized_sequences]
     else:
         list_of_output = []
-        for i in dna_input:
+        for i in tqdm(dna_input, desc="Tokenizing DNA sequences"):
             list_of_output.append(pipeline(i))
         return list_of_output
 
@@ -445,15 +448,14 @@ def construct_dataloader(
         # Then handle tokenization based on config
         if hasattr(args.model_config, "pre_train_for_barcode_bert") and (
             args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or 
-            args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
+            args.model_config.pre_train_for_barcode_bert == "BIOSCAN-1M"):
             use_barcode_bert_tokenizer = True
         else:
             use_barcode_bert_tokenizer = False
         
         print(f"Tokenizing DNA sequences for {split} split")
         barcode_bert_dna_tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode, use_barcode_bert_tokenizer)
-        print(f"Tokenization complete for {split} split")
-
+    
     dataset = Dataset_for_CL(
         args,
         split,
