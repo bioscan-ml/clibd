@@ -36,7 +36,7 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
             print("dna_input_batch is not a tensor, tokenizing it")
             tokenized_dna_sequences = []
             for dna_seq in dna_input_batch:
-                tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=133, return_tensors="pt")
+                tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=660, return_tensors="pt")
                 input_seq = tokenized_output["input_ids"]
                 tokenized_dna_sequences.append(input_seq)
             dna_input_batch = torch.stack(tokenized_dna_sequences).squeeze(1).to(device)

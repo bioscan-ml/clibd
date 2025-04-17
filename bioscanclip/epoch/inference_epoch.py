@@ -68,10 +68,11 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
             if isinstance(dna_input_batch, torch.Tensor):
                 dna_input_batch = dna_input_batch.to(device)
             else:
+                print("dna_input_batch is not a tensor, tokenizing it")
             # Tokenizing DNA sequences
                 tokenized_dna_sequences = []
                 for dna_seq in dna_input_batch:
-                    tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=133, return_tensors="pt")
+                    tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=660, return_tensors="pt")
                     input_seq = tokenized_output["input_ids"]
                     tokenized_dna_sequences.append(input_seq)
                 # Convert DNA tokenized sequences into tensors
