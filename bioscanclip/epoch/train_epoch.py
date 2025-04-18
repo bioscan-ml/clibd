@@ -27,19 +27,8 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
                               'attention_mask': attention_mask.to(device)}
         optimizer.zero_grad()
         image_input_batch = image_input_batch.to(device)
+        dna_input_batch = dna_input_batch.to(device)
 
-        # TODO: move this part to simple_clip.py
-        if isinstance(dna_input_batch, torch.Tensor):
-            dna_input_batch = dna_input_batch.to(device)
-        # if dna_input_batch is not a tensor, tokenize it
-        else:
-            print("dna_input_batch is not a tensor")
-            # tokenized_dna_sequences = []
-            # for dna_seq in tqdm(dna_input_batch, desc="Tokenizing DNA sequences"):
-            #     tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=660, return_tensors="pt")
-            #     input_seq = tokenized_output["input_ids"]
-            #     tokenized_dna_sequences.append(input_seq)
-            # dna_input_batch = torch.stack(tokenized_dna_sequences).squeeze(1).to(device)
 
         if enable_autocast:
             with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
