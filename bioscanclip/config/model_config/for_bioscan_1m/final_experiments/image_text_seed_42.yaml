@@ -7,10 +7,10 @@ dataset: bioscan_1m
 
 image:
   input_type: image
-  model: lora_vit
+  model: vit
 language:
   input_type: sequence
-  model: lora_bert
+  model: bert_small
 
 model_output_name: image_text_4gpu
 evaluation_period: 1

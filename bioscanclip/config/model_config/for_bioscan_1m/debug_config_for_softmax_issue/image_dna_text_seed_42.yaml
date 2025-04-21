@@ -16,8 +16,7 @@ language:
 
 model_output_name: image_dna_text_4gpu_softmax_issue
 evaluation_period: 1
-ckpt_path: ${project_root_path}/ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch/best.pth
-hf_model_name: ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch/best.pth
+ckpt_path: ${project_root_path}/ckpt/bioscan_clip/image_dna_text_4gpu_softmax_issue/best.pth
 output_dim: 768
 port: 29531
 
