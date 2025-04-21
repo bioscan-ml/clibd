@@ -8,7 +8,6 @@ import pandas as pd
 import scipy.io as sio
 import torch
 from tqdm import tqdm
-from tqdm import tqdm
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
