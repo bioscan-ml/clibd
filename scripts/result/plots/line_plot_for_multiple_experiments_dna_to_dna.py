@@ -38,7 +38,7 @@ i_d_image_to_dna_unseen = [71.8, 44.6, 18.7, 7.7]
 
 
 
-fig, ax = plt.subplots(figsize=(6, 4))
+fig, ax = plt.subplots(figsize=(5.3, 4))
 ax.plot(x, baseline_dna_to_dna_seen, 'o-', color=red, linewidth=5)
 ax.plot(x, baseline_dna_to_dna_unseen, 'o--', color=red, linewidth=5)
 ax.plot(x, i_d_dna_to_dna_seen, 'o-', color=yellow, linewidth=5)
