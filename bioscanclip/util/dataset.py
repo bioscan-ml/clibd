@@ -134,8 +134,6 @@ class Dataset_for_CL(Dataset):
         self.pre_train_with_small_set = False
         if hasattr(args.model_config, "train_with_small_subset"):
             self.pre_train_with_small_set = args.model_config.train_with_small_subset
-        language_model_name = "prajjwal1/bert-small"
-        self.tokenizer, _ = load_pre_trained_bert(language_model_name)
 
         if self.for_open_clip:
             # self.tokenizer = open_clip.get_tokenizer('ViT-B-32')
@@ -143,8 +141,10 @@ class Dataset_for_CL(Dataset):
         else:
             if hasattr(args.model_config, "language"):
                 language_model_name = "prajjwal1/bert-small"
-                if hasattr(args.model_config.language, "pre_train_model"):
+                if hasattr(args.model_config.language, "model"):
                     language_model_name = args.model_config.language.pre_train_model
+                if language_model_name == "bert-small":
+                    language_model_name = "prajjwal1/bert-small"
                 self.tokenizer, _ = load_pre_trained_bert(language_model_name)
 
         list_of_label_dict = get_array_of_label_dicts(self.hdf5_inputs_path, split)
