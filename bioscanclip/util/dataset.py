@@ -134,6 +134,7 @@ class Dataset_for_CL(Dataset):
         self.pre_train_with_small_set = False
         if hasattr(args.model_config, "train_with_small_subset"):
             self.pre_train_with_small_set = args.model_config.train_with_small_subset
+        
 
         if self.for_open_clip:
             # self.tokenizer = open_clip.get_tokenizer('ViT-B-32')
@@ -276,17 +277,22 @@ class Dataset_for_CL(Dataset):
             language_token_type_ids = torch.zeros(1, )
             language_attention_mask = torch.zeros(1, )
         else:
+            if hasattr(self, "tokenizer") and self.tokenizer is not None:
+                language_tokens = self.tokenizer([self.list_of_label_string[idx]], padding="max_length", max_length=20,
+                                                 truncation=True)
+                
+                
+                language_input_ids = language_tokens['input_ids']
+                language_token_type_ids = language_tokens['token_type_ids']
+                language_attention_mask = language_tokens['attention_mask']
 
-            language_tokens = self.tokenizer([self.list_of_label_string[idx]], padding="max_length", max_length=20,
-                                             truncation=True)
-            
-            language_input_ids = language_tokens['input_ids']
-            language_token_type_ids = language_tokens['token_type_ids']
-            language_attention_mask = language_tokens['attention_mask']
-
-            language_input_ids = torch.tensor(language_input_ids[0])
-            language_token_type_ids = torch.tensor(language_token_type_ids[0])
-            language_attention_mask = torch.tensor(language_attention_mask[0])
+                language_input_ids = torch.tensor(language_input_ids[0])
+                language_token_type_ids = torch.tensor(language_token_type_ids[0])
+                language_attention_mask = torch.tensor(language_attention_mask[0])
+            else:
+                language_input_ids = None
+                language_token_type_ids = None
+                language_attention_mask = None
 
             # language_input_ids = self.hdf5_split_group["language_tokens_input_ids"][idx]
             # language_token_type_ids = self.hdf5_split_group["language_tokens_token_type_ids"][idx]
