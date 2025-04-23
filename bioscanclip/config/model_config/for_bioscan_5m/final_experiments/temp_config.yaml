@@ -7,13 +7,13 @@ dataset: bioscan_5m
 
 image:
   input_type: image
-  pre_train_model: vit_base_patch16_224
+  model: vit_base_patch16_224
 dna:
   input_type: sequence
-  pre_train_model: barcode_bert
+  model: barcode_bert
 language:
   input_type: sequence
-  pre_train_model: prajjwal1/bert-small
+  model: prajjwal1/bert-small
 
 model_output_name: image_dna_text_4gpu-testing_tokenizer
 evaluation_period: 1
