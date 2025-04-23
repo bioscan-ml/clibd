@@ -290,9 +290,10 @@ class Dataset_for_CL(Dataset):
                 language_token_type_ids = torch.tensor(language_token_type_ids[0])
                 language_attention_mask = torch.tensor(language_attention_mask[0])
             else:
-                language_input_ids = []
-                language_token_type_ids = []
-                language_attention_mask = []
+                # set ids and others to empty tensors
+                language_input_ids = torch.zeros(1, )
+                language_token_type_ids = torch.zeros(1, )
+                language_attention_mask = torch.zeros(1, )
 
             # language_input_ids = self.hdf5_split_group["language_tokens_input_ids"][idx]
             # language_token_type_ids = self.hdf5_split_group["language_tokens_token_type_ids"][idx]
