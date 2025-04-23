@@ -7,7 +7,7 @@ dataset: bioscan_5m
 
 image:
   input_type: image
-  pre_train_model: vit_base_patch16_224
+  pre_train_model: vit
 dna:
   input_type: sequence
   pre_train_model: barcode_bert

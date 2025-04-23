@@ -131,12 +131,7 @@ class CLIBDDNAEncoder(nn.Module):
             nn.init.zeros_(w_B.weight)
 
     def forward(self, sequence) -> Tensor:
-        """
-        TODO: change to "return self.base_dna_encoder(x).hidden_states[-1].mean(dim=1)"
-        TODO: Then also retrain the models.
-        """
-
-        return self.base_dna_encoder(sequence).logits.softmax(dim=-1).mean(dim=1)
+        return self.base_dna_encoder(sequence).hidden_states[-1].mean(dim=1)
 
 class Freeze_DNA_Encoder(nn.Module):
     def __init__(self):
