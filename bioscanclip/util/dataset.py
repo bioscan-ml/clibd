@@ -142,7 +142,7 @@ class Dataset_for_CL(Dataset):
             if hasattr(args.model_config, "language"):
                 language_model_name = "prajjwal1/bert-small"
                 if hasattr(args.model_config.language, "model"):
-                    language_model_name = args.model_config.language.pre_train_model
+                    language_model_name = args.model_config.language.model
                 if language_model_name == "bert-small":
                     language_model_name = "prajjwal1/bert-small"
                 self.tokenizer, _ = load_pre_trained_bert(language_model_name)
@@ -279,6 +279,7 @@ class Dataset_for_CL(Dataset):
 
             language_tokens = self.tokenizer([self.list_of_label_string[idx]], padding="max_length", max_length=20,
                                              truncation=True)
+            
             language_input_ids = language_tokens['input_ids']
             language_token_type_ids = language_tokens['token_type_ids']
             language_attention_mask = language_tokens['attention_mask']
