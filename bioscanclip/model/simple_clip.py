@@ -175,7 +175,7 @@ def load_clip_model(args, device=None):
                 language_model_name = 'prajjwal1/bert-small'
                 if hasattr(args.model_config.language, 'pre_train_model'):
                     language_model_name = args.model_config.language.pre_train_model
-                if language_model_name == "bert_small":
+                if language_model_name == "bert-small" or language_model_name == "bert_small":
                     language_model_name = 'prajjwal1/bert-small'
                 _, pre_trained_bert = load_pre_trained_bert(language_model_name)
                 if disable_lora:
