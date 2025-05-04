@@ -201,9 +201,9 @@ class CLIBDDNAEncoder(nn.Module):
             nn.init.zeros_(w_B.weight)
 
     def forward(self, input) -> Tensor:
-        input_ids = input["input_ids"]
-        attention_mask = input["attention_mask"]
-        token_type_ids = input["token_type_ids"]
+        input_ids = input["input_ids"].to(device)
+        attention_mask = input["attention_mask"].to(device)
+        token_type_ids = input["token_type_ids"].to(device)
         outputs = self.base_dna_encoder(
             input_ids=input_ids,
             attention_mask=attention_mask,

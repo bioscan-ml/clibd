@@ -30,6 +30,8 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
         if isinstance(dna_input_batch, torch.Tensor):
             dna_input_batch = dna_input_batch.to(device)
         # if dna_input_batch is not a tensor, tokenize it
+        elif isinstance(dna_input_batch, dict):
+            pass
         else:
             raise TypeError("dna_input_batch should be a tensor")
 

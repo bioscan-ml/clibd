@@ -66,8 +66,12 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
 
             if isinstance(dna_input_batch, torch.Tensor):
                 dna_input_batch = dna_input_batch.to(device)
+            # if dna_input_batch is not a tensor, tokenize it
+            elif isinstance(dna_input_batch, dict):
+                pass
             else:
                 raise TypeError("dna_input_batch should be a tensor")
+
             # Forward pass through model
             image_output, dna_output, language_output, logit_scale, logit_bias = model(
                 image_input_batch.to(device),
