@@ -148,6 +148,7 @@ def main_process(rank: int, world_size: int, args):
         args.save_inference = False
         args.save_ckpt = False
 
+
     current_datetime = datetime.datetime.now()
     formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H%M%S")
     args = copy.deepcopy(args)
@@ -273,6 +274,12 @@ def main_process(rank: int, world_size: int, args):
     os.makedirs(folder_path, exist_ok=True)
 
     OmegaConf.save(args, os.path.join(folder_path, 'config.yaml'))
+    if args.debug_flag:
+        """
+            Test only one epoch
+            Set args.model_config.epochs = 1
+            """
+        args.model_config.epochs = 1
 
     for epoch in range(args.model_config.epochs):
         dist.broadcast(stop_flag, src=0)
@@ -283,7 +290,16 @@ def main_process(rank: int, world_size: int, args):
                                                                  pre_train_dataloader, model, optimizer,
                                                                  criterion, rank, rank=rank, scheduler=scheduler,
                                                                  for_open_clip=for_open_clip,
-                                                                 fix_temperature=fix_temperature, scaler=scaler, enable_autocast=enable_amp)
+                                                                 fix_temperature=fix_temperature, scaler=scaler, enable_autocast=enable_amp, one_step_only=args.debug_flag)
+        """
+        If debug_flag is True, we only train one step.
+        """
+
+        if args.debug_flag:
+            """
+            For debug purpose, always evaluate.
+            """
+            eval_skip_epoch = -1
 
         if (epoch % args.model_config.evaluation_period == 0 or epoch == args.model_config.epochs - 1) and rank == 0 and epoch > eval_skip_epoch:
             original_model = model.module if hasattr(model, 'module') else model
