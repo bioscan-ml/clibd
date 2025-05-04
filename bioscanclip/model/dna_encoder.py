@@ -94,7 +94,7 @@ class KmerTokenizerWithAttMask(object):
 
         # 3) attention mask: 1 for any k-mer containing A/C/G/T, 0 if all 'N'
         attention_mask = [
-            0 if all(base == "N" for base in token) else 1
+            0 if any(base == "N" for base in token) else 1
             for token in tokens
         ]
         # 4) convert tokens to IDs
