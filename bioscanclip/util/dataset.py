@@ -267,16 +267,24 @@ class Dataset_for_CL(Dataset):
                 curr_dna_input = self.hdf5_split_group["barcode"][idx].decode("utf-8")
                 if self.dna_tokenizer is not None:
                     curr_dna_input = self.dna_tokenizer(curr_dna_input)
+                    curr_dna_input['input_ids'] = torch.tensor(curr_dna_input['input_ids'])
+                    curr_dna_input['token_type_ids'] = torch.tensor(curr_dna_input['token_type_ids'])
+                    curr_dna_input['attention_mask'] = torch.tensor(curr_dna_input['attention_mask'])
                 else:
                     raise TypeError(
                         f"DNA input type is sequence, but dna_tokenizer is None. Please check the config file."
                     )
             else:
                 # Using preprocessed DNA tokens
-                curr_dna_input = self.dna_tokens[idx]
+                raise NotImplementedError(
+                    f"Using pre-tokenized DNA tokens is not supported now."
+                )
         else:
             # Using pre-extracted DNA features
-            curr_dna_input = self.hdf5_split_group["dna_features"][idx].astype(np.float32)
+            raise NotImplementedError(
+                f"DNA input can only be sequence now. Please check the config file."
+            )
+            # curr_dna_input = self.hdf5_split_group["dna_features"][idx].astype(np.float32)
 
         if self.dataset == "bioscan_5m":
             curr_processid = self.hdf5_split_group["processid"][idx].decode("utf-8")
