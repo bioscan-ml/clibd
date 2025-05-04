@@ -7,7 +7,7 @@ from torch.cuda.amp import autocast
 from transformers import AutoTokenizer, AutoModel
 
 def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimizer, criterion, device, scaler, scheduler=None,
-                for_open_clip=False, rank=None, fix_temperature=None, enable_autocast=False, one_step_only=True):
+                for_open_clip=False, rank=None, fix_temperature=None, enable_autocast=False):
     torch.autograd.set_detect_anomaly(True)
     if rank == 0:
         pbar = tqdm(enumerate(dataloader), total=len(dataloader))
@@ -75,8 +75,4 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
             if activate_wandb:
                 wandb.log({"loss": loss.item(), "step": step + epoch * len(dataloader), "learning_rate": current_lr})
 
-        # NOTE: This is for debugging purpose only
-        if one_step_only:
-            print(f"Debugging: one_step_only is set to {one_step_only}. Stopping after one step.")
-            break
     print(f'Epoch [{epoch}/{total_epochs}], Loss: {epoch_loss / len(dataloader)}')

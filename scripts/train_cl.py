@@ -290,7 +290,7 @@ def main_process(rank: int, world_size: int, args):
                                                                  pre_train_dataloader, model, optimizer,
                                                                  criterion, rank, rank=rank, scheduler=scheduler,
                                                                  for_open_clip=for_open_clip,
-                                                                 fix_temperature=fix_temperature, scaler=scaler, enable_autocast=enable_amp, one_step_only=args.debug_flag)
+                                                                 fix_temperature=fix_temperature, scaler=scaler, enable_autocast=enable_amp)
         """
         If debug_flag is True, we only train one step.
         """
