@@ -67,10 +67,16 @@ class KmerTokenizerWithAttMask(object):
             self.stride = stride
 
         # build vocab once
-        kmer_iter = ("".join(kmer) for kmer in product("ACGT", repeat=k))
-        specials = ["<MASK>", "<CLS>", "<UNK>"]
-        self.vocab = build_vocab_from_iterator(kmer_iter, specials=specials)
-        self.vocab.set_default_index(self.vocab["<UNK>"])
+        # kmer_iter = ("".join(kmer) for kmer in product("ACGT", repeat=k))
+        # specials = ["<MASK>", "<CLS>", "<UNK>"]
+        # vocab = build_vocab_from_iterator(kmer_iter, specials=specials)
+        # vocab.set_default_index(vocab["<UNK>"])
+
+        kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
+        vocab = build_vocab_from_iterator(kmer_iter, specials=["<MASK>", "<CLS>", "<UNK>"])
+        vocab.set_default_index(vocab["<UNK>"])
+
+        self.vocab = vocab
 
     def __call__(self, dna_sequence: str):
         # 1) pad or truncate to max_len
@@ -85,14 +91,17 @@ class KmerTokenizerWithAttMask(object):
             for i in range(0, len(seq) - self.k + 1, self.stride)
         ]
 
+
         # 3) attention mask: 1 for any k-mer containing A/C/G/T, 0 if all 'N'
         attention_mask = [
             0 if all(base == "N" for base in token) else 1
             for token in tokens
         ]
-
         # 4) convert tokens to IDs
-        input_ids = [self.vocab[token] for token in tokens]
+        input_ids = [0, *self.vocab(tokens)]
+        
+        # 4.5) Fix attention mask
+        attention_mask = [1, *attention_mask]
 
         # 5) single-segment token types (all zeros)
         token_type_ids = [0] * len(input_ids)
