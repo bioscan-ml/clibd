@@ -98,8 +98,8 @@ class KmerTokenizerWithAttMask(object):
             for token in tokens
         ]
         # 4) convert tokens to IDs
-        input_ids = [0, *self.vocab(tokens)]
-        
+        input_ids = [self.vocab[token] for token in tokens]
+        input_ids = [0, *input_ids]  # add CLS token at the beginning
         # 4.5) Fix attention mask
         attention_mask = [1, *attention_mask]
 
