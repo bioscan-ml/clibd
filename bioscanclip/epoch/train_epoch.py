@@ -15,7 +15,6 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
         pbar = enumerate(dataloader)
     epoch_loss = 0.0
     total_step = len(dataloader)
-    tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
     model.train()
     stop_flag = False
     for step, batch in pbar:
@@ -32,12 +31,7 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
             dna_input_batch = dna_input_batch.to(device)
         # if dna_input_batch is not a tensor, tokenize it
         else:
-            tokenized_dna_sequences = []
-            for dna_seq in dna_input_batch:
-                tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=133, return_tensors="pt")
-                input_seq = tokenized_output["input_ids"]
-                tokenized_dna_sequences.append(input_seq)
-            dna_input_batch = torch.stack(tokenized_dna_sequences).squeeze(1).to(device)
+            raise TypeError("dna_input_batch should be a tensor")
 
         if enable_autocast:
             with torch.autocast(device_type='cuda', dtype=torch.bfloat16):

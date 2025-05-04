@@ -10,14 +10,14 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
-from bioscanclip.model.dna_encoder import get_sequence_pipeline
+from bioscanclip.model.dna_encoder import KmerTokenizerWithAttMask
 from torch.utils.data.distributed import DistributedSampler
 import json
 import time
 from transformers import AutoTokenizer
 from bioscanclip.model.language_encoder import load_pre_trained_bert
 import open_clip
-from bioscanclip.util.util import load_kmer_tokenizer, TensorResizeLongEdge
+from bioscanclip.util.util import TensorResizeLongEdge
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -110,6 +110,9 @@ class Dataset_for_CL(Dataset):
             labels=None,
             for_training=False,
             for_open_clip=False,
+            dna_tokenizer=None,
+
+            tokenizer=None,
     ):
         if hasattr(args.model_config, "dataset") and args.model_config.dataset == "bioscan_5m":
             if hasattr(args.model_config, "train_with_small_subset") and args.model_config.train_with_small_subset:
@@ -134,11 +137,12 @@ class Dataset_for_CL(Dataset):
         self.pre_train_with_small_set = False
         if hasattr(args.model_config, "train_with_small_subset"):
             self.pre_train_with_small_set = args.model_config.train_with_small_subset
+        self.dna_tokenizer = dna_tokenizer
         
 
         if self.for_open_clip:
             # self.tokenizer = open_clip.get_tokenizer('ViT-B-32')
-            self.tokenizer = None
+            self.language_tokenizer = None
         else:
             if hasattr(args.model_config, "language"):
                 language_model_name = "prajjwal1/bert-small"
@@ -146,7 +150,7 @@ class Dataset_for_CL(Dataset):
                     language_model_name = args.model_config.language.model
                 if language_model_name == "bert-small" or language_model_name == "bert_small":
                     language_model_name = "prajjwal1/bert-small"
-                self.tokenizer, _ = load_pre_trained_bert(language_model_name)
+                self.language_tokenizer, _ = load_pre_trained_bert(language_model_name)
 
         list_of_label_dict = get_array_of_label_dicts(self.hdf5_inputs_path, split)
         self.list_of_label_string = []
@@ -261,9 +265,17 @@ class Dataset_for_CL(Dataset):
         if self.dna_inout_type == "sequence":
             if self.dna_tokens is None:
                 curr_dna_input = self.hdf5_split_group["barcode"][idx].decode("utf-8")
+                if self.dna_tokenizer is not None:
+                    curr_dna_input = self.dna_tokenizer(curr_dna_input)
+                else:
+                    raise TypeError(
+                        f"DNA input type is sequence, but dna_tokenizer is None. Please check the config file."
+                    )
             else:
+                # Using preprocessed DNA tokens
                 curr_dna_input = self.dna_tokens[idx]
         else:
+            # Using pre-extracted DNA features
             curr_dna_input = self.hdf5_split_group["dna_features"][idx].astype(np.float32)
 
         if self.dataset == "bioscan_5m":
@@ -277,9 +289,9 @@ class Dataset_for_CL(Dataset):
             language_token_type_ids = torch.zeros(1, )
             language_attention_mask = torch.zeros(1, )
         else:
-            if hasattr(self, "tokenizer") and self.tokenizer is not None:
-                language_tokens = self.tokenizer([self.list_of_label_string[idx]], padding="max_length", max_length=20,
-                                                 truncation=True)
+            if hasattr(self, "tokenizer") and self.language_tokenizer is not None:
+                language_tokens = self.language_tokenizer([self.list_of_label_string[idx]], padding="max_length", max_length=20,
+                                                          truncation=True)
                 
                 
                 language_input_ids = language_tokens['input_ids']
@@ -291,6 +303,11 @@ class Dataset_for_CL(Dataset):
                 language_attention_mask = torch.tensor(language_attention_mask[0])
             else:
                 # set ids and others to empty tensors
+                language_tokens = {
+                    'input_ids': torch.zeros(1, ),
+                    'token_type_ids': torch.zeros(1, ),
+                    'attention_mask': torch.zeros(1, )
+                }
                 language_input_ids = torch.zeros(1, )
                 language_token_type_ids = torch.zeros(1, )
                 language_attention_mask = torch.zeros(1, )
@@ -399,7 +416,6 @@ def construct_dataloader(
         args,
         split,
         length,
-        sequence_pipeline,
         return_language=False,
         labels=None,
         for_pre_train=False,
@@ -423,18 +439,14 @@ def construct_dataloader(
 
     if dna_type == "sequence":
         if hasattr(args.model_config, "pre_train_for_barcode_bert") and (args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
-            pass
+            dna_tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
         else:
-
-            if args.model_config.dataset == "bioscan_5m":
-                if hasattr(args.model_config, "train_with_small_subset") and args.model_config.train_with_small_subset:
-                    hdf5_file = h5py.File(args.bioscan_5m_data.path_to_smaller_hdf5_data, "r", libver="latest")
-                else:
-                    hdf5_file = h5py.File(args.bioscan_5m_data.path_to_hdf5_data, "r", libver="latest")
-            else:
-                hdf5_file = h5py.File(args.bioscan_data.path_to_hdf5_data, "r", libver="latest")
-            unprocessed_dna_barcode = np.array([item.decode("utf-8") for item in hdf5_file[split]["barcode"][:]])
-            barcode_bert_dna_tokens = tokenize_dna_sequence(sequence_pipeline, unprocessed_dna_barcode)
+            dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k,
+                                                     max_len=args.barcodebert_setting.old_model_setting.max_len)
+    else:
+        raise NotImplementedError(
+            f"DNA input type {dna_type} is not supported. Please check the config file."
+        )
 
     dataset = Dataset_for_CL(
         args,
@@ -447,6 +459,7 @@ def construct_dataloader(
         labels=labels,
         for_training=for_pre_train,
         for_open_clip=for_open_clip,
+        dna_tokenizer=dna_tokenizer,
     )
 
     num_workers = 8
@@ -484,13 +497,10 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
 
     return_language = True
 
-    sequence_pipeline = get_sequence_pipeline()
-
     train_seen_dataloader = construct_dataloader(
         args,
         "train_seen",
         length_dict["train_seen"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -503,7 +513,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "val_seen",
         length_dict["val_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -515,7 +525,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "val_unseen",
         length_dict["val_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -527,7 +537,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "seen_keys",
         length_dict["seen_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -539,7 +549,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "val_unseen_keys",
         length_dict["val_unseen_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -550,7 +560,7 @@ def load_bioscan_dataloader_with_train_seen_and_separate_keys(args, world_size=N
         args,
         "test_unseen_keys",
         length_dict["test_unseen_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -572,13 +582,13 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
 
     return_language = True
 
-    sequence_pipeline = get_sequence_pipeline()
+    dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k, max_len=args.barcodebert_setting.old_model_setting.max_len)
 
     pre_train_dataloader = construct_dataloader(
         args,
         "no_split_and_seen_train",
         length_dict["no_split_and_seen_train"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -591,7 +601,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "all_keys",
         length_dict["all_keys"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -603,7 +613,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "val_seen",
         length_dict["val_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -615,7 +625,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "val_unseen",
         length_dict["val_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -627,7 +637,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "test_seen",
         length_dict["test_seen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -639,7 +649,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "test_unseen",
         length_dict["test_unseen"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -650,7 +660,7 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
         args,
         "other_heldout",
         length_dict["other_heldout"],
-        sequence_pipeline,
+
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -666,13 +676,10 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
 
     return_language = True
 
-    sequence_pipeline = get_sequence_pipeline()
-
     seen_val_dataloader = construct_dataloader(
         args,
         "val_seen",
         length_dict["val_seen"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -684,7 +691,6 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
         args,
         "val_unseen",
         length_dict["val_unseen"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -696,7 +702,6 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
         args,
         "all_keys",
         length_dict["all_keys"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -712,7 +717,6 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
                 args,
                 "no_split_and_seen_train",
                 length_dict["no_split_and_seen_train"],
-                sequence_pipeline,
                 return_language=return_language,
                 labels=None,
                 for_pre_train=True,
@@ -725,7 +729,6 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
                 args,
                 "no_split",
                 length_dict["no_split"],
-                sequence_pipeline,
                 return_language=return_language,
                 labels=None,
                 for_pre_train=True,
@@ -739,7 +742,6 @@ def load_dataloader(args, world_size=None, rank=None, for_pretrain=True):
             args,
             "train_seen",
             length_dict["train_seen"],
-            sequence_pipeline,
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -755,14 +757,12 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
 
     return_language = True
 
-    sequence_pipeline = get_sequence_pipeline()
 
     if hasattr(args.model_config, 'dataset') and args.model_config.dataset == "bioscan_5m":
         train_seen_dataloader = construct_dataloader(
             args,
             "seen_keys",
             length_dict["seen_keys"],
-            sequence_pipeline,
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -774,7 +774,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "train_seen",
             length_dict["train_seen"],
-            sequence_pipeline,
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -786,7 +785,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "val_seen",
         length_dict["val_seen"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -798,7 +796,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "val_unseen",
         length_dict["val_unseen"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -810,7 +807,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "test_seen",
         length_dict["test_seen"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -822,7 +818,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "test_unseen",
         length_dict["test_unseen"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -834,7 +829,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "seen_keys",
         length_dict["seen_keys"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,
@@ -847,7 +841,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "unseen_keys",
             length_dict["unseen_keys"],
-            sequence_pipeline,
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -858,7 +851,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "unseen_keys",
             length_dict["unseen_keys"],
-            sequence_pipeline,
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -871,7 +863,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "val_unseen_keys",
             length_dict["val_unseen_keys"],
-            sequence_pipeline,
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -882,7 +873,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
             args,
             "test_unseen_keys",
             length_dict["test_unseen_keys"],
-            sequence_pipeline,
             return_language=return_language,
             labels=None,
             for_pre_train=False,
@@ -894,7 +884,6 @@ def load_bioscan_dataloader_all_small_splits(args, world_size=None, rank=None):
         args,
         "all_keys",
         length_dict["all_keys"],
-        sequence_pipeline,
         return_language=return_language,
         labels=None,
         for_pre_train=False,

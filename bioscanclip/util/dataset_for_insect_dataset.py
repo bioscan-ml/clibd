@@ -5,7 +5,7 @@ import pandas as pd
 import scipy.io as sio
 import torch
 from PIL import Image
-from bioscanclip.model.dna_encoder import get_sequence_pipeline
+from bioscanclip.model.dna_encoder import KmerTokenizerWithAttMask
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 from torch.utils.data.distributed import DistributedSampler
@@ -173,13 +173,18 @@ def load_insect_dataloader_trainval(args,num_workers=8, shuffle_for_train_seen_k
     with open(filename, 'r') as file:
         specie_to_other_labels = json.load(file)
 
-    sequence_pipeline = get_sequence_pipeline()
+    if hasattr(args.model_config, "pre_train_for_barcode_bert") and (
+            args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
+        dna_tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
+    else:
+        dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k,
+                                                 max_len=args.barcodebert_setting.old_model_setting.max_len)
 
     trainval_dataset = INSECTDataset(
         args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
         species_to_others=specie_to_other_labels, split="trainval_loc",
         image_hdf5_path=args.insect_data.path_to_image_hdf5,
-        dna_transforms=sequence_pipeline, for_training=True, cl_label=False
+        dna_tokenizer=dna_tokenizer, for_training=True, cl_label=False
     )
 
 
@@ -193,14 +198,19 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
     with open(filename, 'r') as file:
         specie_to_other_labels = json.load(file)
 
-    sequence_pipeline = get_sequence_pipeline()
+    if hasattr(args.model_config, "pre_train_for_barcode_bert") and (
+            args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
+        dna_tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
+    else:
+        dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k,
+                                                 max_len=args.barcodebert_setting.old_model_setting.max_len)
 
     if load_all_in_one:
         all_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="all",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False
+            dna_tokenizer=dna_tokenizer, for_training=False
         )
 
         all_dataloader = DataLoader(all_dataset, batch_size=args.model_config.batch_size,
@@ -212,35 +222,35 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="train_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=True
+            dna_tokenizer=dna_tokenizer, for_training=True
         )
 
         train_dataset_for_key = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="train_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False
+            dna_tokenizer=dna_tokenizer, for_training=False
         )
 
         val_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="val_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False
+            dna_tokenizer=dna_tokenizer, for_training=False
         )
 
         test_seen_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="test_seen_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False
+            dna_tokenizer=dna_tokenizer, for_training=False
         )
 
         test_unseen_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="test_unseen_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            dna_transforms=sequence_pipeline, for_training=False
+            dna_tokenizer=dna_tokenizer, for_training=False
         )
         if rank is None:
             print(rank)
