@@ -61,6 +61,15 @@ class KmerTokenizerWithAttMask(object):
         self.max_len = max_len
         self.stride = stride or k
 
+        # if stride is None:
+        #     self.stride = k
+        # else:
+        #     self.stride = stride
+        #
+        # # check stride
+        print(f"Stride: {self.stride}")
+        exit()
+
         # build vocab once
         kmer_iter = ("".join(kmer) for kmer in product("ACGT", repeat=k))
         specials = ["<MASK>", "<CLS>", "<UNK>"]
