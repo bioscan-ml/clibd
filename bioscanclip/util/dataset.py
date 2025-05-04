@@ -297,11 +297,10 @@ class Dataset_for_CL(Dataset):
             language_token_type_ids = torch.zeros(1, )
             language_attention_mask = torch.zeros(1, )
         else:
-            if hasattr(self, "tokenizer") and self.language_tokenizer is not None:
+            if hasattr(self, "language_tokenizer") and self.language_tokenizer is not None:
                 language_tokens = self.language_tokenizer([self.list_of_label_string[idx]], padding="max_length", max_length=20,
                                                           truncation=True)
-                
-                
+
                 language_input_ids = language_tokens['input_ids']
                 language_token_type_ids = language_tokens['token_type_ids']
                 language_attention_mask = language_tokens['attention_mask']
@@ -310,6 +309,9 @@ class Dataset_for_CL(Dataset):
                 language_token_type_ids = torch.tensor(language_token_type_ids[0])
                 language_attention_mask = torch.tensor(language_attention_mask[0])
             else:
+                """
+                TODO: Edit the code for correctly manage the language tokenization for pre-trained openclip encoder.
+                """
                 # set ids and others to empty tensors
                 language_tokens = {
                     'input_ids': torch.zeros(1, ),

@@ -19,7 +19,6 @@ def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint, k=5):
         bioscan_bert_checkpoint: Path to checkpoint file
         k: k-mer size (default: 5)
     """
-    print(f"\nLoading model from {bioscan_bert_checkpoint}")
     
     # Build k-mer vocabulary
     kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
