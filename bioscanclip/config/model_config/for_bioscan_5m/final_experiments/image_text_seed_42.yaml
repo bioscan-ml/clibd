@@ -7,10 +7,10 @@ dataset: bioscan_5m
 
 image:
   input_type: image
-  pre_train_model: vit
+  model: vit
 language:
   input_type: sequence
-  pre_train_model: bert_small
+  model: bert_small
 
 model_output_name: image_text_4gpu
 evaluation_period: 1

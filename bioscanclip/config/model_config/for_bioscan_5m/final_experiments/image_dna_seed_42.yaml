@@ -7,10 +7,10 @@ dataset: bioscan_5m
 
 image:
   input_type: image
-  pre_train_model: vit
+  model: vit
 dna:
   input_type: sequence
-  pre_train_model: barcode_bert
+  model: barcode_bert
 
 model_output_name: image_dna_4gpu
 evaluation_period: 1

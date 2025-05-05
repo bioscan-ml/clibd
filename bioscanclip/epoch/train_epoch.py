@@ -15,7 +15,6 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
         pbar = enumerate(dataloader)
     epoch_loss = 0.0
     total_step = len(dataloader)
-    tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
     model.train()
     stop_flag = False
     for step, batch in pbar:
@@ -69,4 +68,5 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
 
             if activate_wandb:
                 wandb.log({"loss": loss.item(), "step": step + epoch * len(dataloader), "learning_rate": current_lr})
+
     print(f'Epoch [{epoch}/{total_epochs}], Loss: {epoch_loss / len(dataloader)}')

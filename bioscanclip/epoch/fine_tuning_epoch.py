@@ -3,6 +3,8 @@ import wandb
 import torch
 import numpy as np
 
+# TODO: these functions either need to be updated or removed.
+
 def label_batch_to_species_idx(label_batch, unique_species_for_seen):
     species_list = label_batch['species']
     target = torch.tensor([unique_species_for_seen.index(species) for species in species_list])

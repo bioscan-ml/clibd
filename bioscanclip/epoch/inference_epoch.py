@@ -53,7 +53,6 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
     label_list = []
     file_name_list =[]
 
-    tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)  # Load tokenizer
     pbar = tqdm(enumerate(dataloader), total=len(dataloader))
     model.eval()
     with torch.no_grad():
@@ -62,16 +61,16 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
             processid_batch, image_input_batch, dna_input_batch, input_ids, token_type_ids, attention_mask, label_batch = batch
 
             if for_open_clip:
-                language_input = input_ids
+                language_input_batch = input_ids
             else:
-                language_input = {'input_ids': input_ids.to(device), 'token_type_ids': token_type_ids.to(device),
-                                  'attention_mask': attention_mask.to(device)}
+                language_input_batch = {'input_ids': input_ids.to(device), 'token_type_ids': token_type_ids.to(device),
+                                    'attention_mask': attention_mask.to(device)}
 
             # Forward pass through model
             image_output, dna_output, language_output, logit_scale, logit_bias = model(
                 image_input_batch.to(device),
                 dna_input_batch.to(device),
-                language_input
+                language_input_batch
             )
 
             # Normalizing and storing outputs
