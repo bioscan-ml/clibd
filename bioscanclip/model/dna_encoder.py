@@ -8,7 +8,7 @@ from torch import Tensor
 from torchtext.vocab import build_vocab_from_iterator
 from transformers import BertConfig, BertForMaskedLM
 from bioscanclip.util.util import remove_extra_pre_fix
-
+from transformers import AutoTokenizer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -49,6 +49,18 @@ def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint, k=5):
     model.load_state_dict(model_ckpt, strict=False)
     return model.to(device)
 
+class NewKmerTokenizer(object):
+    def __init__(self, model_name="bioscan-ml/BarcodeBERT", max_length=660):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+        self.max_length = max_length
+
+    def __call__(self, text):
+        return self.tokenizer(
+            text,
+            padding="max_length",
+            truncation=True,
+            max_length=self.max_length
+        )
 class KmerTokenizerWithAttMask(object):
     def __init__(self, k: int = 5, max_len: int = 660, stride: int = None):
         """

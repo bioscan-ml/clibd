@@ -11,7 +11,7 @@ from tqdm import tqdm
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
-from bioscanclip.model.dna_encoder import KmerTokenizerWithAttMask
+from bioscanclip.model.dna_encoder import KmerTokenizerWithAttMask, NewKmerTokenizer
 from torch.utils.data.distributed import DistributedSampler
 import json
 import time
@@ -33,29 +33,6 @@ def get_label_ids(input_labels):
 
     label_ids = np.array([label_to_id[label] for label in input_labels])
     return label_ids, label_to_id
-
-
-# First modify the tokenize_dna_sequence function
-def tokenize_dna_sequence(pipeline, dna_input, use_barcode_bert_tokenizer=False):
-    if use_barcode_bert_tokenizer:
-        tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
-        tokenized_sequences = []
-        for seq in tqdm(dna_input, desc="Tokenizing DNA sequences"):
-            tokenized_output = tokenizer(
-                seq, 
-                padding='max_length', 
-                truncation=True, 
-                max_length=660, 
-                return_tensors=None)
-            input_seq = tokenized_output["input_ids"]
-            tokenized_sequences.append(input_seq)
-
-        return tokenized_sequences
-    else:
-        list_of_output = []
-        for i in tqdm(dna_input, desc="Tokenizing DNA sequences"):
-            list_of_output.append(pipeline(i))
-        return list_of_output
 
 
 def prepare(dataset, rank, world_size, batch_size=32, pin_memory=False, num_workers=0, shuffle=False):
@@ -284,9 +261,9 @@ class Dataset_for_CL(Dataset):
                 curr_dna_input = self.hdf5_split_group["barcode"][idx].decode("utf-8")
                 if self.dna_tokenizer is not None:
                     curr_dna_input = self.dna_tokenizer(curr_dna_input)
-                    curr_dna_input['input_ids'] = torch.tensor(curr_dna_input['input_ids'])
-                    curr_dna_input['token_type_ids'] = torch.tensor(curr_dna_input['token_type_ids'])
-                    curr_dna_input['attention_mask'] = torch.tensor(curr_dna_input['attention_mask'])
+                    curr_dna_input['input_ids'] = torch.tensor(curr_dna_input['input_ids']).clone()
+                    curr_dna_input['token_type_ids'] = torch.tensor(curr_dna_input['token_type_ids']).clone()
+                    curr_dna_input['attention_mask'] = torch.tensor(curr_dna_input['attention_mask']).clone()
                 else:
                     raise TypeError(
                         f"DNA input type is sequence, but dna_tokenizer is None. Please check the config file."
@@ -466,10 +443,7 @@ def construct_dataloader(
 
     if dna_type == "sequence":
         if hasattr(args.model_config, "pre_train_for_barcode_bert") and (args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "BIOSCAN-1M"):
-            # curr_dna_input['input_ids'] = torch.tensor(curr_dna_input['input_ids'])
-            # curr_dna_input['token_type_ids'] = torch.tensor(curr_dna_input['token_type_ids'])
-            # curr_dna_input['attention_mask'] = torch.tensor(curr_dna_input['attention_mask'])
-            dna_tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
+            dna_tokenizer = NewKmerTokenizer(max_length=args.barcodebert_setting.old_model_setting.max_len) 
         else:
             dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k,
                                                      max_len=args.barcodebert_setting.old_model_setting.max_len)

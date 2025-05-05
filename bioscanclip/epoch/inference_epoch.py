@@ -69,7 +69,7 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
             # Forward pass through model
             image_output, dna_output, language_output, logit_scale, logit_bias = model(
                 image_input_batch.to(device),
-                dna_input_batch.to(device),
+                dna_input_batch,
                 language_input_batch
             )
 

@@ -26,7 +26,7 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
                               'attention_mask': attention_mask.to(device)}
         optimizer.zero_grad()
         image_input_batch = image_input_batch.to(device)
-        dna_input_batch = dna_input_batch.to(device)
+        dna_input_batch = dna_input_batch
 
 
         if enable_autocast:
