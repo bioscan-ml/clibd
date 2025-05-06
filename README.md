@@ -34,12 +34,12 @@ We provide pretrained embeddings and model weights.  We evaluate our models by e
 
 | Training data |  Aligned modalities |  Embeddings |  Model  | Config |
 |---------------|---------------------|-------------|---------|--------|
-| BIOSCAN-1M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/no_alignment/extracted_feature_from_test_split.hdf5) |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_no_loading.yaml)  |
-| BIOSCAN-1M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna/extracted_feature_from_test_split.hdf5)|  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna/best.pth)   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_seed_42.yaml)  |
-| BIOSCAN-1M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna_text/extracted_feature_from_test_split.hdf5)       |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna_text/best.pth) |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml) |
-| BIOSCAN-5M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/no_alignment/extracted_feature_from_test_split.hdf5)       |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/no_alignment_baseline/no_align.yaml)  |
-| BIOSCAN-5M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna/best.pth)    |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_seed_42.yaml)  |
-| BIOSCAN-5M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna_text/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna_text/best.pth)|   [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_text_seed_42.yaml)  |
+| BIOSCAN-1M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/no_alignment/extracted_feature_from_test_split.hdf5) |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_no_loading.yaml)  |
+| BIOSCAN-1M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna/extracted_feature_from_test_split.hdf5)|  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna/best.pth)   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_seed_42.yaml)  |
+| BIOSCAN-1M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/extracted_feature_from_test_split.hdf5)       |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/best.pth) |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml) |
+| BIOSCAN-5M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/no_alignment/extracted_feature_from_test_split.hdf5)       |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/no_alignment_baseline/no_align.yaml)  |
+| BIOSCAN-5M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna/best.pth)    |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_seed_42.yaml)  |
+| BIOSCAN-5M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/best.pth)|   [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_text_seed_42.yaml)  |
 
 We also provide checkpoints trained with LoRA layers. You can download them from this [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/bioscan_clip/lora_version_ckpt.zip)
 
@@ -103,11 +103,11 @@ wget https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/BarcodeBERT/mo
 cd ../../..
 mkdir -p ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
 cd ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna_text/best.pth
+wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/best.pth
 cd ../../../..
 mkdir -p ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
 cd ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna_text/best.pth
+wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/best.pth
 ```
 For downloading all CLIBD pre-trained models: [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/ckpt.zip)
 
@@ -245,7 +245,28 @@ If you use CLIBD in your research, please cite:
 }
 ```
 
-###  Version Info.
+# Version log
+
+## Version 1.0 (Current version)
+
+- Release for the initial ICLR camera-ready submission
+- Support loading the checkpoint from Hugging Face when no checkpoint is found in the local path
+
+
+## Future Plans
+
+### Version 1.1
+
+- Fix the softmax and DNA masking issue
+- Update the k-mer tokenizer for the old BarcodeBERT model to accept attention masks as input
+- …
+
+### Version 1.2
+
+- Change the default model setup (e.g., full fine-tuning by default, then LoRA if needed)
+- Find a replacement for TorchText since it is no longer actively maintained
+- Add a dependency for the `bioscanclip` package
+- …
 
 
 
