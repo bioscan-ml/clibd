@@ -1,15 +1,13 @@
 import os
 
+import h5py
 import hydra
-import numpy as np
 import torch
 from omegaconf import DictConfig
-import h5py
 
-from bioscanclip.epoch.inference_epoch import get_feature_and_label
-from bioscanclip.model.simple_clip import load_clip_model
 from bioscanclip.util.dataset import load_bioscan_dataloader_all_small_splits
-from bioscanclip.util.util import get_features_and_label, initialize_model_and_load_from_checkpoint
+from bioscanclip.util.util import get_features_and_label
+from bioscanclip.model.simple_clip import initialize_model_and_load_from_checkpoint
 
 PLOT_FOLDER = "html_plots"
 RETRIEVAL_FOLDER = "image_retrieval"

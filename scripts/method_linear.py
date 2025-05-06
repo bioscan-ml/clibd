@@ -9,8 +9,8 @@ from tqdm import tqdm
 from bioscanclip.model.simple_clip import load_clip_model
 from bioscanclip.util.dataset import load_bioscan_dataloader_with_train_seen_and_separate_keys, \
     load_bioscan_dataloader_all_small_splits
-from bioscanclip.util.util import top_k_micro_accuracy, top_k_macro_accuracy, make_prediction, \
-    initialize_model_and_load_from_checkpoint
+from bioscanclip.util.util import top_k_micro_accuracy, top_k_macro_accuracy, make_prediction
+from bioscanclip.model.simple_clip import initialize_model_and_load_from_checkpoint
 from bioscanclip.epoch.inference_epoch import get_feature_and_label
 import numpy as np
 import torch.nn.functional as F

@@ -1,20 +1,16 @@
 import os
 
+import h5py
 import hydra
 import numpy as np
 import torch
-from omegaconf import DictConfig
-import h5py
-
-from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.dataset import load_dataloader_for_everything_in_5m
-from bioscanclip.util.util import get_features_and_label, initialize_model_and_load_from_checkpoint
-
-from tqdm import tqdm
-import numpy as np
 import torch.nn.functional as F
+from omegaconf import DictConfig
+from tqdm import tqdm
+
 from bioscanclip.epoch.inference_epoch import convert_label_dict_to_list_of_dict
-import torch
+from bioscanclip.util.dataset import load_dataloader_for_everything_in_5m
+from bioscanclip.model.simple_clip import initialize_model_and_load_from_checkpoint
 
 PLOT_FOLDER = "html_plots"
 RETRIEVAL_FOLDER = "image_retrieval"

@@ -1,11 +1,15 @@
+import os
+
 import torch.nn.functional as F
 import timm
 import torch.nn as nn
+from huggingface_hub import hf_hub_download
+
 from bioscanclip.model.mlp import MLPEncoder
 from bioscanclip.model.image_encoder import CLIBDImageEncoder
 from bioscanclip.model.dna_encoder import load_pre_trained_bioscan_bert, CLIBDDNAEncoder
 from bioscanclip.model.language_encoder import load_pre_trained_bert, CLIBDLanguageEncoder
-from bioscanclip.util.util import add_lora_layer_to_open_clip
+from bioscanclip.util.util import add_lora_layer_to_open_clip, update_checkpoint_param_names, handle_local_ckpt_path
 import numpy as np
 from typing import Optional
 import torch
@@ -190,7 +194,6 @@ def load_clip_model(args, device=None):
         if args.model_config.dna.input_type == "sequence":
             if dna_model == "barcode_bert" or dna_model == "lora_barcode_bert":
                 barcode_bert_ckpt = args.bioscan_bert_checkpoint
-
                 if hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M":
                     barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_bioscan_5_m
                 elif hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "CANADA-1M":
@@ -220,10 +223,6 @@ def load_clip_model(args, device=None):
         for param in model.parameters():
             param.requires_grad = True
 
-    # if for_bio_clip:
-    #     for param in model.open_clip_model.parameters():
-    #         param.requires_grad = False
-
     # Freeze based on requirements
     if hasattr(args.model_config, 'image') and hasattr(args.model_config.image, 'freeze') and args.model_config.image.freeze:
         if model.image_encoder is not None:
@@ -243,4 +242,43 @@ def load_clip_model(args, device=None):
         elif model.open_clip_model is not None:
             for param in model.open_clip_model.transformer.parameters():
                 param.requires_grad = False
+    return model
+
+def initialize_model_and_load_from_checkpoint(args, device=None):
+    print("Initialize model...")
+
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model = load_clip_model(args, device)
+
+    local_ckpt_path = handle_local_ckpt_path(args)
+
+    if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
+        pass
+    elif os.path.exists(local_ckpt_path):
+        checkpoint = torch.load(local_ckpt_path, map_location="cuda:0")
+        checkpoint = update_checkpoint_param_names(checkpoint)
+        model.load_state_dict(checkpoint)
+        print(f"Loaded from local: {local_ckpt_path}")
+    else:
+        try:
+            hf_model_name = f"ckpt/bioscan_clip/{args.version}/{args.model_config.dataset}/{args.model_config.model_output_name}/best.pth"
+            try:
+                checkpoint_path = hf_hub_download(
+                    repo_id=args.hf_repo_id,
+                    filename=hf_model_name,
+                )
+            except:
+                raise ValueError(
+                    "Checkpoint not found in Hugging Face Hub. Please check the config file"
+                )
+            checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            checkpoint = update_checkpoint_param_names(checkpoint)
+            model.load_state_dict(checkpoint)
+            print(f"Loaded from hf repo: {args.hf_repo_id}/{hf_model_name}")
+        except:
+            # No local checkpoint found and no checkpoint in the Hugging Face Hub
+            raise ValueError(
+                "Neither the local checkpoint nor the huggingface checkpoint was found. Please check the config file")
     return model

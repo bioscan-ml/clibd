@@ -23,9 +23,10 @@ from bioscanclip.util.util import (
     get_features_and_label,
     make_prediction,
     All_TYPE_OF_FEATURES_OF_KEY,
+    handle_local_ckpt_path
 )
 from huggingface_hub import hf_hub_download
-from bioscanclip.util.util import update_checkpoint_param_names, initialize_model_and_load_from_checkpoint
+from bioscanclip.model.simple_clip import update_checkpoint_param_names, initialize_model_and_load_from_checkpoint
 
 PLOT_FOLDER = "html_plots"
 RETRIEVAL_FOLDER = "image_retrieval"
@@ -535,8 +536,6 @@ def check_for_acc_about_correct_predict_seen_or_unseen(final_pred_list, species_
 def main(args: DictConfig) -> None:
     args.save_inference = True
 
-    local_ckpt_path = handle_local_ckpt_path(args)
-
     folder_for_saving = os.path.join(
         args.project_root_path, "extracted_embedding", args.model_config.dataset, args.model_config.model_output_name
     )
@@ -587,7 +586,7 @@ def main(args: DictConfig) -> None:
 
     else:
         # initialize model
-        model = initialize_model_and_load_from_checkpoint(args)
+        model = initialize_model_and_load_from_checkpoint(args, device=device)
         model = model.to(device)
         model.eval()
 

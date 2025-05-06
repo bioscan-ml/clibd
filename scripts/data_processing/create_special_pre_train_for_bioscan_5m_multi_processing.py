@@ -1,32 +1,12 @@
-import io
-import json
 import os
-from collections import Counter, defaultdict
 import random
+from collections import defaultdict
+from multiprocessing import Pool
+
 import h5py
 import hydra
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-import plotly
-import plotly.express as px
-import torch
-from PIL import Image
 from omegaconf import DictConfig
-from sklearn.metrics import silhouette_samples
-from umap import UMAP
-
-from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.dataset import load_bioscan_dataloader_all_small_splits
-from bioscanclip.util.util import (
-    categorical_cmap,
-    inference_and_print_result,
-    get_features_and_label,
-    make_prediction,
-    All_TYPE_OF_FEATURES_OF_KEY,
-)
 from tqdm import tqdm
-from multiprocessing import Pool
 
 """
 This script is using to generate a special one fifth pre-train data for the BIOSCAN-5M's pre-train split.

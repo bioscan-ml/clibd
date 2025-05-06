@@ -1,22 +1,17 @@
-import io
-import os
+import pickle
+import random
+
+import faiss
 import gradio as gr
-import cv2
 import h5py
 import hydra
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-from PIL import Image
 from omegaconf import DictConfig
-from tqdm import tqdm
-from bioscanclip.model.simple_clip import load_clip_model
-import faiss
-import pickle
-import random
 
-from bioscanclip.util.util import initialize_model_and_load_from_checkpoint
+from bioscanclip.model.simple_clip import initialize_model_and_load_from_checkpoint
 
 
 def getRandID():

@@ -1,21 +1,6 @@
-import io
-import os
-
-import cv2
 import h5py
 import hydra
-import numpy as np
-import torch
-import torch.nn.functional as F
-import torchvision.transforms as transforms
-from PIL import Image
 from omegaconf import DictConfig
-from tqdm import tqdm
-import gc
-from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.util import update_checkpoint_param_names
-import matplotlib.pyplot as plt
-import random
 
 
 def get_image_file_name_list(hdf5_file, split_name, data_used_as_id='image_file'):
