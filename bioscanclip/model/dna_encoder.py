@@ -66,12 +66,6 @@ class KmerTokenizerWithAttMask(object):
         else:
             self.stride = stride
 
-        # build vocab once
-        # kmer_iter = ("".join(kmer) for kmer in product("ACGT", repeat=k))
-        # specials = ["<MASK>", "<CLS>", "<UNK>"]
-        # vocab = build_vocab_from_iterator(kmer_iter, specials=specials)
-        # vocab.set_default_index(vocab["<UNK>"])
-
         kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
         vocab = build_vocab_from_iterator(kmer_iter, specials=["<MASK>", "<CLS>", "<UNK>"])
         vocab.set_default_index(vocab["<UNK>"])
@@ -91,25 +85,12 @@ class KmerTokenizerWithAttMask(object):
             for i in range(0, len(seq) - self.k + 1, self.stride)
         ]
 
-
-        # 3) attention mask: 1 for any k-mer containing A/C/G/T, 0 if all 'N'
-        attention_mask = [
-            0 if all(base == "N" for base in token) else 1
-            for token in tokens
-        ]
-        # 4) convert tokens to IDs
+        # 3) convert tokens to IDs
         input_ids = [self.vocab[token] for token in tokens]
         input_ids = [0, *input_ids]  # add CLS token at the beginning
-        # 4.5) Fix attention mask
-        attention_mask = [1, *attention_mask]
-
-        # 5) single-segment token types (all zeros)
-        token_type_ids = [0] * len(input_ids)
 
         return {
             "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids
         }
 
 # Old kmer tokenizer
@@ -215,33 +196,11 @@ class CLIBDDNAEncoder(nn.Module):
 
     def forward(self, input) -> Tensor:
         input_ids = input["input_ids"].to(device)
-        attention_mask = input["attention_mask"].to(device)
-        token_type_ids = input["token_type_ids"].to(device)
-
-        # For now, don't take attention mask and token type ids into account
-        # outputs = self.base_dna_encoder(
-        #     input_ids=input_ids,
-        #     attention_mask=attention_mask,
-        #     token_type_ids=token_type_ids,
-        #     output_hidden_states=True
-        # )
 
         outputs = self.base_dna_encoder(
             input_ids=input_ids,
-            # attention_mask=attention_mask,
-            # token_type_ids=token_type_ids,
             output_hidden_states=True
         )
-
-        # if attention_mask is not None:
-        #     mask = attention_mask.unsqueeze(-1)
-        #     masked_h = hidden_states * mask
-        #     sum_h = masked_h.sum(dim=1)
-        #     lengths = mask.sum(dim=1)
-        #     mean_h = sum_h / lengths
-        #     return mean_h
-        # else:
-        #     return hidden_states.mean(dim=1)
 
         hidden_states = outputs.hidden_states[-1]
         return hidden_states.mean(dim=1)
