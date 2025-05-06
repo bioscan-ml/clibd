@@ -147,7 +147,6 @@ def extract_feature(dataloader, model, device, for_open_clip=False, multi_gpu=Fa
 
             print(file_name_list[0])
             print(encoded_image_feature_list[0])
-            exit()
 
 
 @hydra.main(config_path="../../bioscanclip/config", config_name="global_config", version_base="1.1")
