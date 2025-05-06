@@ -8,7 +8,7 @@ import h5py
 
 from bioscanclip.model.simple_clip import load_clip_model
 from bioscanclip.util.dataset import load_dataloader_for_everything_in_5m, load_bioscan_dataloader_all_small_splits
-from bioscanclip.util.util import get_features_and_label
+from bioscanclip.util.util import get_features_and_label, initialize_model_and_load_from_checkpoint
 
 from tqdm import tqdm
 import numpy as np
@@ -167,15 +167,10 @@ def main(args: DictConfig) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # initialize model
-    print("Initialize model...")
-    model = load_clip_model(args, device)
-    if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
-        pass
-    else:
-        checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
-        model.load_state_dict(checkpoint)
+    model = initialize_model_and_load_from_checkpoint(args)
+    model = model.to(device)
+    model.eval()
 
-    print("Model loaded!")
     print("Start processing dataloader...")
 
     (_,

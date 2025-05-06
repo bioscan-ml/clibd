@@ -937,3 +937,54 @@ def update_checkpoint_param_names(checkpoint):
         new_checkpoint[new_name] = tensor
 
     return new_checkpoint
+
+
+def handle_local_ckpt_path(args):
+    local_ckpt_path = None
+    if hasattr(args.model_config, "ckpt_path"):
+        local_ckpt_path = args.model_config.ckpt_path
+    else:
+        local_ckpt_path = f"{project_root_path}/ckpt/bioscan_clip/{version}/{model_config.model_output_name}/best.pth"
+
+    # check for best or last checkpoint, if ckpt_path is not specified to a exact file.
+    if os.path.exists(os.path.join(local_ckpt_path, "best.pth")):
+        local_ckpt_path = os.path.join(local_ckpt_path, "best.pth")
+    elif os.path.exists(os.path.join(local_ckpt_path, "last.pth")):
+        local_ckpt_path = os.path.join(local_ckpt_path, "last.pth")
+    return local_ckpt_path
+
+
+def initialize_model_and_load_from_checkpoint(args):
+    print("Initialize model...")
+
+    model = load_clip_model(args, device)
+
+    if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
+        pass
+    elif os.path.exists(local_ckpt_path):
+
+        print(f"Load from local: {local_ckpt_path}")
+        checkpoint = torch.load(local_ckpt_path, map_location="cuda:0")
+
+    else:
+        try:
+            hf_model_name = f"ckpt/bioscan_clip/{version}/{model_config.dataset}/{model_config.model_output_name}/best.pth"
+            try:
+                checkpoint_path = hf_hub_download(
+                    repo_id=args.hf_repo_id,
+                    filename=hf_model_name,
+                )
+            except:
+                raise ValueError(
+                    "Checkpoint not found in Hugging Face Hub. Please check the config file"
+                )
+            print(f"Load from hf repo: {args.hf_repo_id}/{hf_model_name}")
+            checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+
+            checkpoint = update_checkpoint_param_names(checkpoint)
+            model.load_state_dict(checkpoint)
+        except:
+            # No local checkpoint found and no checkpoint in the Hugging Face Hub
+            raise ValueError(
+                "Neither the local checkpoint nor the huggingface checkpoint was found. Please check the config file")
+    return model

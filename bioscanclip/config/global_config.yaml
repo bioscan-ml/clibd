@@ -32,7 +32,7 @@ insect_data:
   image_dir: ${insect_data.dir}/images
   species_to_other: ${insect_data.dir}/specie_to_other_labels.json
 save_ckpt: true
-bioscan_bert_checkpoint: ${project_root_path}/ckpt/BarcodeBERT/5_mer/model_41.pth
+bioscan_bert_checkpoint: ${project_root_path}/ckpt/BarcodeBERT/old_checkpoints/trained_with_canada_1_5M/model_41.pth
 model_output_dir: ${project_root_path}/ckpt/bioscan_clip
 
 inference_and_eval_setting:
@@ -65,3 +65,5 @@ general_fine_tune_setting:
 hf_repo_id: bioscan-ml/clibd
 
 default_seed: 42
+
+version: ver_1_0

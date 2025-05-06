@@ -20,7 +20,7 @@ from bioscanclip.epoch.train_epoch import train_epoch
 from inference_and_eval import get_features_and_label, inference_and_print_result
 from bioscanclip.model.loss_func import ContrastiveLoss, ClipLoss
 from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.util import set_seed
+from bioscanclip.util.util import set_seed, handle_local_ckpt_path
 from bioscanclip.util.dataset import load_dataloader, load_insect_dataloader
 from bioscanclip.util.util import scale_learning_rate
 

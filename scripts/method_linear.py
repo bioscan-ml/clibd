@@ -9,7 +9,8 @@ from tqdm import tqdm
 from bioscanclip.model.simple_clip import load_clip_model
 from bioscanclip.util.dataset import load_bioscan_dataloader_with_train_seen_and_separate_keys, \
     load_bioscan_dataloader_all_small_splits
-from bioscanclip.util.util import top_k_micro_accuracy, top_k_macro_accuracy, make_prediction
+from bioscanclip.util.util import top_k_micro_accuracy, top_k_macro_accuracy, make_prediction, \
+    initialize_model_and_load_from_checkpoint
 from bioscanclip.epoch.inference_epoch import get_feature_and_label
 import numpy as np
 import torch.nn.functional as F
@@ -450,10 +451,9 @@ def main(args: DictConfig) -> None:
     species_level_label_to_index_dict, idx_to_all_labels = load_all_seen_species_name_and_create_label_map(
         train_seen_dataloader)
 
-    original_model = load_clip_model(args)
-    checkpoint = torch.load(args.model_config.ckpt_path, map_location='cuda:0')
-    original_model.load_state_dict(checkpoint)
+    original_model = initialize_model_and_load_from_checkpoint(args)
     original_model = original_model.to(device)
+    original_model.eval()
 
     image_classifier = copy.deepcopy(original_model.image_encoder)
     # image_classifier.reset_classifier(num_classes=916)

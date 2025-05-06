@@ -16,6 +16,8 @@ import faiss
 import pickle
 import random
 
+from bioscanclip.util.util import initialize_model_and_load_from_checkpoint
+
 
 def getRandID():
     indx = random.randrange(0, 396503)
@@ -107,13 +109,11 @@ def wrapperFunc(args: DictConfig):
             ]
         )
 
-        model = load_clip_model(args, device)
-        if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
-            pass
-        else:
-            checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
-            model.load_state_dict(checkpoint)
+        # initialize model
+        model = initialize_model_and_load_from_checkpoint(args)
+        model = model.to(device)
         model.eval()
+
         # Get the image encoder
         image_encoder = get_image_encoder(model, device)
         # Encode all the images

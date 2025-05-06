@@ -25,7 +25,7 @@ from bioscanclip.util.util import (
     All_TYPE_OF_FEATURES_OF_KEY,
 )
 from huggingface_hub import hf_hub_download
-from bioscanclip.util.util import update_checkpoint_param_names
+from bioscanclip.util.util import update_checkpoint_param_names, initialize_model_and_load_from_checkpoint
 
 PLOT_FOLDER = "html_plots"
 RETRIEVAL_FOLDER = "image_retrieval"
@@ -534,10 +534,8 @@ def check_for_acc_about_correct_predict_seen_or_unseen(final_pred_list, species_
 @hydra.main(config_path="../bioscanclip/config", config_name="global_config", version_base="1.1")
 def main(args: DictConfig) -> None:
     args.save_inference = True
-    if os.path.exists(os.path.join(args.model_config.ckpt_path, "best.pth")):
-        args.model_config.ckpt_path = os.path.join(args.model_config.ckpt_path, "best.pth")
-    elif os.path.exists(os.path.join(args.model_config.ckpt_path, "last.pth")):
-        args.model_config.ckpt_path = os.path.join(args.model_config.ckpt_path, "last.pth")
+
+    local_ckpt_path = handle_local_ckpt_path(args)
 
     folder_for_saving = os.path.join(
         args.project_root_path, "extracted_embedding", args.model_config.dataset, args.model_config.model_output_name
@@ -589,32 +587,9 @@ def main(args: DictConfig) -> None:
 
     else:
         # initialize model
-        print("Initialize model...")
-
-        model = load_clip_model(args, device)
-
-        if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
-            pass
-        elif os.path.exists(args.model_config.ckpt_path) or hasattr(args.model_config, "hf_model_name"):
-            if os.path.exists(args.model_config.ckpt_path):
-                print(f"Loading model from {args.model_config.ckpt_path}")
-                checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
-
-            elif hasattr(args.model_config, "hf_model_name"):
-                checkpoint_path = hf_hub_download(
-                    repo_id=args.hf_repo_id,
-                    filename=args.model_config.hf_model_name,
-                )
-                print(f"Loading model from {args.hf_repo_id}/{args.model_config.hf_model_name}")
-                checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-
-            checkpoint = update_checkpoint_param_names(checkpoint)
-            model.load_state_dict(checkpoint)
-
-        else:
-            raise ValueError("No checkpoint found. Please specify a valid checkpoint path.")
-
-
+        model = initialize_model_and_load_from_checkpoint(args)
+        model = model.to(device)
+        model.eval()
 
         # Load data
         # args.model_config.batch_size = 24
