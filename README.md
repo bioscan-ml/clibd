@@ -244,6 +244,7 @@ If you use CLIBD in your research, please cite:
     url={https://openreview.net/forum?id=d5HUnyByAI},
 }
 ```
+
 # Version log
 
 ## Version 1.0 (Current version)
