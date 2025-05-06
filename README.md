@@ -96,9 +96,18 @@ debug_flag: false
 
 Download checkpoint for BarcodeBERT and bioscan_clip and place them under `ckpt`.  
 ```shell
-pip install huggingface-cli
 # From project folder
-huggingface-cli download bioscan-ml/clibd --include "ckpt/*" --local-dir .
+mkdir -p ckpt/BarcodeBERT/5_mer
+cd ckpt/BarcodeBERT/5_mer
+wget https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/BarcodeBERT/model_41.pth
+cd ../../..
+mkdir -p ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
+cd ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
+wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/best.pth
+cd ../../../..
+mkdir -p ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
+cd ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
+wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/best.pth
 ```
 
 You can also check this [link](https://huggingface.co/bioscan-ml/clibd/tree/main) to download the files manually.
