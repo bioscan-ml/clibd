@@ -94,7 +94,7 @@ class KmerTokenizerWithAttMask(object):
 
         # 3) attention mask: 1 for any k-mer containing A/C/G/T, 0 if all 'N'
         attention_mask = [
-            0 if any(base == "N" for base in token) else 1
+            0 if all(base == "N" for base in token) else 1
             for token in tokens
         ]
         # 4) convert tokens to IDs
@@ -217,23 +217,35 @@ class CLIBDDNAEncoder(nn.Module):
         input_ids = input["input_ids"].to(device)
         attention_mask = input["attention_mask"].to(device)
         token_type_ids = input["token_type_ids"].to(device)
+
+        # For now, don't take attention mask and token type ids into account
+        # outputs = self.base_dna_encoder(
+        #     input_ids=input_ids,
+        #     attention_mask=attention_mask,
+        #     token_type_ids=token_type_ids,
+        #     output_hidden_states=True
+        # )
+
         outputs = self.base_dna_encoder(
             input_ids=input_ids,
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
+            # attention_mask=attention_mask,
+            # token_type_ids=token_type_ids,
             output_hidden_states=True
         )
 
+        # if attention_mask is not None:
+        #     mask = attention_mask.unsqueeze(-1)
+        #     masked_h = hidden_states * mask
+        #     sum_h = masked_h.sum(dim=1)
+        #     lengths = mask.sum(dim=1)
+        #     mean_h = sum_h / lengths
+        #     return mean_h
+        # else:
+        #     return hidden_states.mean(dim=1)
+
         hidden_states = outputs.hidden_states[-1]
-        if attention_mask is not None:
-            mask = attention_mask.unsqueeze(-1)
-            masked_h = hidden_states * mask
-            sum_h = masked_h.sum(dim=1)
-            lengths = mask.sum(dim=1)
-            mean_h = sum_h / lengths
-            return mean_h
-        else:
-            return hidden_states.mean(dim=1)
+        return hidden_states.mean(dim=1)
+
 
 class Freeze_DNA_Encoder(nn.Module):
     def __init__(self):

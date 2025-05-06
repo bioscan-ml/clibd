@@ -592,13 +592,10 @@ def load_dataloader_for_everything_in_5m(args, world_size=None, rank=None):
 
     return_language = True
 
-    dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k, max_len=args.barcodebert_setting.old_model_setting.max_len)
-
     pre_train_dataloader = construct_dataloader(
         args,
         "no_split_and_seen_train",
         length_dict["no_split_and_seen_train"],
-
         return_language=return_language,
         labels=None,
         for_pre_train=False,
