@@ -244,6 +244,30 @@ If you use CLIBD in your research, please cite:
     url={https://openreview.net/forum?id=d5HUnyByAI},
 }
 ```
+# Version log
+
+## Version 1.0 (Current version)
+
+- Release for the initial ICLR camera-ready submission
+- Support loading the checkpoint from Hugging Face when no checkpoint is found in the local path
+
+
+## Future Plans
+
+### Version 1.1
+
+- Fix the softmax and DNA masking issue
+- Update the k-mer tokenizer for the old BarcodeBERT model to accept attention masks as input
+- …
+
+### Version 1.2
+
+- Change the default model setup (e.g., full fine-tuning by default, then LoRA if needed)
+- Find a replacement for TorchText since it is no longer actively maintained
+- Add a dependency for the `bioscanclip` package
+- …
+
+
 
 # Acknowledgements
 We would like to express our gratitude for the use of the INSECT dataset, which played a pivotal role in the completion of our experiments. Additionally, we acknowledge the use and modification of code from the [Fine-Grained-ZSL-with-DNA](https://github.com/sbadirli/Fine-Grained-ZSL-with-DNA) repository, which facilitated part of our experimental work. The contributions of these resources have been invaluable to our project, and we appreciate the efforts of all developers and researchers involved.
