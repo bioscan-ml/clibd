@@ -100,7 +100,8 @@ pip install huggingface-cli
 # From project folder
 huggingface-cli download bioscan-ml/clibd --include "ckpt/*" --local-dir .
 ```
-For downloading all CLIBD pre-trained models: [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/ckpt.zip)
+
+You can also check this [link](https://huggingface.co/bioscan-ml/clibd/tree/main) to download the files manually.
 
 ## Train
 
