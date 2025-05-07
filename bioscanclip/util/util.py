@@ -73,28 +73,10 @@ class Table:
         print(f"+{separator}+")
 
 
-class PadSequence(object):
-    def __init__(self, max_len):
-        self.max_len = max_len
-
-    def __call__(self, dna_sequence):
-        if len(dna_sequence) > self.max_len:
-            return dna_sequence[: self.max_len]
-        else:
-            return dna_sequence + "N" * (self.max_len - len(dna_sequence))
 
 
-class KmerTokenizer(object):
-    def __init__(self, k, stride=1):
-        self.k = k
-        self.stride = stride
 
-    def __call__(self, dna_sequence):
-        tokens = []
-        for i in range(0, len(dna_sequence) - self.k + 1, self.stride):
-            k_mer = dna_sequence[i : i + self.k]
-            tokens.append(k_mer)
-        return tokens
+
 
 
 class NewKmerTokenizer(object):
@@ -837,37 +819,6 @@ def remove_module_from_state_dict(state_dict):
         new_state_dict[key.replace("module.", "")] = value
     return new_state_dict
 
-def load_kmer_tokenizer(args, k=4):
-    base_pairs = "ACGT"
-    tokenize_n_nucleotide = False
-    special_tokens = ["[MASK]", "[UNK]"] 
-    UNK_TOKEN = "[UNK]"
-    stride = 1
-    max_len = 660
-    
-    k_mer = k
-    kmers = ["".join(kmer) for kmer in product(base_pairs, repeat=k_mer)]
-
-    if tokenize_n_nucleotide:
-        prediction_kmers = []
-        other_kmers = []
-        for kmer in kmers:
-            if "N" in kmer:
-                other_kmers.append(kmer)
-            else:
-                prediction_kmers.append(kmer)
-
-        kmers = prediction_kmers + other_kmers
-
-    kmer_dict = dict.fromkeys(kmers, 1)
-    vocab = build_vocab_from_dict(kmer_dict, specials=special_tokens)
-    vocab.set_default_index(vocab[UNK_TOKEN])
-    vocab_size = len(vocab)
-    tokenizer = KmerTokenizer(
-        k_mer, vocab, stride=stride, padding=True, max_len=max_len
-    )
-
-    return tokenizer
 
 class TensorResizeLongEdge(object):
     def __init__(self, long_edge_size, interpolation_mode='bilinear'):

@@ -175,6 +175,8 @@ def load_clip_model(args, device=None):
                 language_model_name = 'prajjwal1/bert-small'
                 if hasattr(args.model_config.language, 'pre_train_model'):
                     language_model_name = args.model_config.language.pre_train_model
+                if language_model_name == "bert-small" or language_model_name == "bert_small":
+                    language_model_name = 'prajjwal1/bert-small'
                 _, pre_trained_bert = load_pre_trained_bert(language_model_name)
                 if disable_lora:
                     language_encoder = CLIBDLanguageEncoder(model=pre_trained_bert, r=4, num_classes=args.model_config.output_dim,
@@ -193,7 +195,7 @@ def load_clip_model(args, device=None):
 
                 if hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M":
                     barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_bioscan_5_m
-                elif hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "CANADA-1M":
+                elif hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "BIOSCAN-1M":
                     barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_canada_1_5_m
 
                 pre_trained_barcode_bert = load_pre_trained_bioscan_bert(

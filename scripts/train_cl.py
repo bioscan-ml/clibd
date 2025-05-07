@@ -148,6 +148,7 @@ def main_process(rank: int, world_size: int, args):
         args.save_inference = False
         args.save_ckpt = False
 
+
     current_datetime = datetime.datetime.now()
     formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H%M%S")
     args = copy.deepcopy(args)
@@ -284,6 +285,7 @@ def main_process(rank: int, world_size: int, args):
                                                                  criterion, rank, rank=rank, scheduler=scheduler,
                                                                  for_open_clip=for_open_clip,
                                                                  fix_temperature=fix_temperature, scaler=scaler, enable_autocast=enable_amp)
+
 
         if (epoch % args.model_config.evaluation_period == 0 or epoch == args.model_config.epochs - 1) and rank == 0 and epoch > eval_skip_epoch:
             original_model = model.module if hasattr(model, 'module') else model

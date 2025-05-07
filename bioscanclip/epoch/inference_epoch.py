@@ -3,7 +3,9 @@ import numpy as np
 import torch.nn.functional as F
 import torch
 from transformers import AutoTokenizer
-
+import matplotlib as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 def convert_label_dict_to_list_of_dict(label_batch):
     order = label_batch['order']
@@ -51,7 +53,6 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
     label_list = []
     file_name_list =[]
 
-    tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)  # Load tokenizer
     pbar = tqdm(enumerate(dataloader), total=len(dataloader))
     model.eval()
     with torch.no_grad():
@@ -60,28 +61,16 @@ def get_feature_and_label(dataloader, model, device, for_open_clip=False, multi_
             processid_batch, image_input_batch, dna_input_batch, input_ids, token_type_ids, attention_mask, label_batch = batch
 
             if for_open_clip:
-                language_input = input_ids
+                language_input_batch = input_ids
             else:
-                language_input = {'input_ids': input_ids.to(device), 'token_type_ids': token_type_ids.to(device),
-                                  'attention_mask': attention_mask.to(device)}
-
-            if isinstance(dna_input_batch, torch.Tensor):
-                dna_input_batch = dna_input_batch.to(device)
-            else:
-            # Tokenizing DNA sequences
-                tokenized_dna_sequences = []
-                for dna_seq in dna_input_batch:
-                    tokenized_output = tokenizer(dna_seq, padding='max_length', truncation=True, max_length=133, return_tensors="pt")
-                    input_seq = tokenized_output["input_ids"]
-                    tokenized_dna_sequences.append(input_seq)
-                # Convert DNA tokenized sequences into tensors
-                dna_input_batch = torch.stack(tokenized_dna_sequences).squeeze(1).to(device)
+                language_input_batch = {'input_ids': input_ids.to(device), 'token_type_ids': token_type_ids.to(device),
+                                    'attention_mask': attention_mask.to(device)}
 
             # Forward pass through model
             image_output, dna_output, language_output, logit_scale, logit_bias = model(
                 image_input_batch.to(device),
-                dna_input_batch,  # Passing tokenized DNA sequences
-                language_input
+                dna_input_batch,
+                language_input_batch
             )
 
             # Normalizing and storing outputs
