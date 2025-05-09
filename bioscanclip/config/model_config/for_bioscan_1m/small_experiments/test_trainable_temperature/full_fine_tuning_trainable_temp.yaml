@@ -1,7 +1,7 @@
 batch_size: 300
 epochs: 15
 labels_for_driven_positive_and_negative_pairs:
-wandb_project_name: BIOSCAN-CLIP-small_experiments
+wandb_project_name: BIOSCAN-CLIP-small_experiments_test_trainable_temp
 using_train_seen_for_pre_train: true
 dataset: bioscan_1m
 
@@ -15,7 +15,7 @@ language:
   input_type: sequence
   model: bert_small
 
-model_output_name: full_fine_tuning_trainable_tempeature
+model_output_name: full_fine_tuning_trainable_temperature
 evaluation_period: 1
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/full_fine_tuning_one_cycle_lr_sche_with_all_gather/image_dna_text.pth
 output_dim: 768

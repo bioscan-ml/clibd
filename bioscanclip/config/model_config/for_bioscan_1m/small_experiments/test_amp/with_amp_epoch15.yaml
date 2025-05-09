@@ -1,7 +1,7 @@
 batch_size: 300
 epochs: 15
 labels_for_driven_positive_and_negative_pairs:
-wandb_project_name: BIOSCAN-CLIP-small_experiments-test_amp
+wandb_project_name: BIOSCAN-CLIP-small_experiments_test_amp
 using_train_seen_for_pre_train: true
 dataset: bioscan_1m
 
