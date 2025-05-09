@@ -9,15 +9,15 @@ bind_to: image
 
 image:
   input_type: image
-  model: lora_vit
+  model: vit
   freeze: true
 dna:
   input_type: sequence
-  model: lora_barcode_bert
+  model: barcode_bert
   freeze: false
 language:
   input_type: sequence
-  model: lora_bert
+  model: bert_small
   freeze: true
 
 model_output_name: image_dna_text_4gpu_image_bind_style
@@ -34,6 +34,7 @@ lr_config:
 
 for_open_clip: true
 for_bio_clip: true
+
 all_gather: true
 loss_setup:
   gather_with_grad: true
