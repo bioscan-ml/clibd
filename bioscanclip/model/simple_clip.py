@@ -269,7 +269,7 @@ def initialize_model_and_load_from_checkpoint(args, device=None):
                     repo_id=args.hf_repo_id,
                     filename=hf_model_name,
                 )
-            except:
+            except (OSError, FileNotFoundError):
                 raise ValueError(
                     "Checkpoint not found in Hugging Face Hub. Please check the config file"
                 )
