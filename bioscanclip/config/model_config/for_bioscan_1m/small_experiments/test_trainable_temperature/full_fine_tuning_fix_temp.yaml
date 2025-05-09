@@ -7,13 +7,13 @@ dataset: bioscan_1m
 
 image:
   input_type: image
-  model: lora_vit
+  model: vit
 dna:
   input_type: sequence
-  model: lora_barcode_bert
+  model: barcode_bert
 language:
   input_type: sequence
-  model: lora_bert
+  model: bert_small
 
 model_output_name: full_fine_tuning_fix_tempeature
 evaluation_period: 1
@@ -34,3 +34,7 @@ loss_setup:
   local_loss: false
 fix_temperature: true
 amp: true
+
+random_seed: false
+
+default_seed: 42

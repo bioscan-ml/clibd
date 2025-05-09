@@ -1,19 +1,19 @@
 batch_size: 300
 epochs: 15
 labels_for_driven_positive_and_negative_pairs:
-wandb_project_name: BIOSCAN-CLIP-small_experiments
+wandb_project_name: BIOSCAN-CLIP-small_experiments-test_amp
 using_train_seen_for_pre_train: true
 dataset: bioscan_1m
 
 image:
   input_type: image
-  model: lora_vit
+  model: vit
 dna:
   input_type: sequence
-  model: lora_barcode_bert
+  model: barcode_bert
 language:
   input_type: sequence
-  model: lora_bert
+  model: bert_small
 
 model_output_name: with_amp_epoch15
 evaluation_period: 1
