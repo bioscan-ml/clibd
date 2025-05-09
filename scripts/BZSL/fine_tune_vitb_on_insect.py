@@ -7,15 +7,16 @@ import numpy as np
 import timm
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 import wandb
 from omegaconf import DictConfig, OmegaConf
-from tqdm import tqdm
-import torch.nn.functional as F
-from bioscanclip.util.dataset_for_insect_dataset import load_insect_dataloader, load_insect_dataloader_trainval
-from bioscanclip.model.vit_with_mlp import ViTWIthExtraLayer
-from bioscanclip.model.simple_clip import load_clip_model
 from torch.optim.lr_scheduler import LambdaLR
+from tqdm import tqdm
+
+from bioscanclip.model.vit_with_mlp import ViTWIthExtraLayer
+from bioscanclip.util.dataset_for_insect_dataset import load_insect_dataloader, load_insect_dataloader_trainval
+
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 

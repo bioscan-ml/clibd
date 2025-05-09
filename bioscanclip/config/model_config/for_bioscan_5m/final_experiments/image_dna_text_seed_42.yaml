@@ -7,18 +7,16 @@ dataset: bioscan_5m
 
 image:
   input_type: image
-  pre_train_model: vit_base_patch16_224
+  model: vit
 dna:
   input_type: sequence
-  pre_train_model: barcode_bert
+  model: barcode_bert
 language:
   input_type: sequence
-  pre_train_model: prajjwal1/bert-small
+  model: bert_small
 
 model_output_name: image_dna_text_4gpu
 evaluation_period: 1
-ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text/best.pth
-hf_model_name: ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text/best.pth
 output_dim: 768
 port: 29531
 

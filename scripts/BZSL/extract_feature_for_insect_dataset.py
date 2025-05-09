@@ -1,19 +1,17 @@
 import copy
-import json
 import os
 
 import hydra
 import numpy as np
 import scipy.io as sio
 import torch
-import torch.distributed as dist
 import torch.multiprocessing as mp
 from omegaconf import DictConfig
 from tqdm import tqdm
 
-from bioscanclip.util.util import get_features_and_label, inference_and_print_result
-from bioscanclip.model.simple_clip import load_clip_model
 from bioscanclip.util.dataset_for_insect_dataset import load_insect_dataloader
+from bioscanclip.util.util import get_features_and_label
+from bioscanclip.model.simple_clip import load_clip_model
 
 
 def main_process(rank: int, world_size: int, args):

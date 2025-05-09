@@ -1,30 +1,21 @@
-import io
+import json
 import json
 import os
-import random
-from collections import Counter, defaultdict
 
 import h5py
 import hydra
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import plotly
-import plotly.express as px
+import pandas as pd
 import torch
-from PIL import Image
 from omegaconf import DictConfig
 from sklearn.metrics import silhouette_samples
-from umap import UMAP
-
-from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.dataset import load_bioscan_dataloader_all_small_splits
-from bioscanclip.util.util import categorical_cmap, inference_and_print_result, get_features_and_label, \
-    make_prediction, All_TYPE_OF_FEATURES_OF_KEY
 from tqdm import tqdm
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
+
+from bioscanclip.util.dataset import load_bioscan_dataloader_all_small_splits
+from bioscanclip.util.util import get_features_and_label, \
+    All_TYPE_OF_FEATURES_OF_KEY
+from bioscanclip.model.simple_clip import load_clip_model
 
 PLOT_FOLDER = "html_plots"
 RETRIEVAL_FOLDER = "image_retrieval"

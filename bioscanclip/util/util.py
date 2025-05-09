@@ -19,6 +19,7 @@ from PIL import Image
 import io
 from itertools import product
 from torchtext.vocab import vocab as build_vocab_from_dict
+import timm
 
 
 LEVELS = ["order", "family", "genus", "species"]
@@ -937,3 +938,20 @@ def update_checkpoint_param_names(checkpoint):
         new_checkpoint[new_name] = tensor
 
     return new_checkpoint
+
+
+def handle_local_ckpt_path(args):
+    local_ckpt_path = None
+    if hasattr(args.model_config, "ckpt_path"):
+        local_ckpt_path = args.model_config.ckpt_path
+    else:
+        local_ckpt_path = f"{args.project_root_path}/ckpt/bioscan_clip/{args.version}/{args.model_config.dataset}/{args.model_config.model_output_name}/best.pth"
+
+    # check for best or last checkpoint, if ckpt_path is not specified to a exact file.
+    if os.path.exists(os.path.join(local_ckpt_path, "best.pth")):
+        local_ckpt_path = os.path.join(local_ckpt_path, "best.pth")
+    elif os.path.exists(os.path.join(local_ckpt_path, "last.pth")):
+        local_ckpt_path = os.path.join(local_ckpt_path, "last.pth")
+    return local_ckpt_path
+
+

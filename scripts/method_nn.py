@@ -1,14 +1,17 @@
 import copy
 import os
+
 import hydra
+import numpy as np
 import torch
 from omegaconf import DictConfig
 from tqdm import tqdm
-from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.dataset import load_bioscan_dataloader_with_train_seen_and_separate_keys, load_bioscan_dataloader_all_small_splits
-from bioscanclip.util.util import top_k_micro_accuracy, top_k_macro_accuracy, make_prediction
+
 from bioscanclip.epoch.inference_epoch import get_feature_and_label
-import numpy as np
+from bioscanclip.util.dataset import load_bioscan_dataloader_with_train_seen_and_separate_keys, \
+    load_bioscan_dataloader_all_small_splits
+from bioscanclip.util.util import top_k_micro_accuracy, top_k_macro_accuracy, make_prediction
+from bioscanclip.model.simple_clip import initialize_model_and_load_from_checkpoint
 
 K_LIST = None
 """
@@ -306,10 +309,9 @@ def main(args: DictConfig) -> None:
     train_seen_dataloader, seen_val_dataloader, unseen_val_dataloader, seen_keys_dataloader, val_unseen_keys_dataloader, test_unseen_keys_dataloader = load_bioscan_dataloader_with_train_seen_and_separate_keys(
         args, for_pretrain=False)
 
-    original_model = load_clip_model(args)
-    checkpoint = torch.load(args.model_config.ckpt_path, map_location='cuda:0')
-    original_model.load_state_dict(checkpoint)
+    original_model = initialize_model_and_load_from_checkpoint(args)
     original_model = original_model.to(device)
+    original_model.eval()
 
     # Save the best_threshold.
 
