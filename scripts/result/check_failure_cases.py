@@ -738,7 +738,7 @@ def main(args: DictConfig) -> None:
                         try:
                             group.create_dataset(embedding_type, data=split[embedding_type])
                             print(f"Created dataset for {embedding_type}")
-                        except:
+                        except (ValueError, TypeError, OSError) as e:
                             print(f"Error in creating dataset for {embedding_type}")
                         # group.create_dataset(embedding_type, data=split[embedding_type])
             new_file.close()
@@ -801,50 +801,6 @@ def main(args: DictConfig) -> None:
         print(f"Per class accuracy is saved in {per_claSS_acc_path}")
         print(f"Accuracy dict is saved in {acc_dict_path}")
         print(f"Prediction dict is saved in {pred_dict_path}")
-    # try:
-    #     seen_keys_dataloader
-    #     val_unseen_keys_dataloader
-    #     test_unseen_keys_dataloader
-    # except:
-    #     if args.inference_and_eval_setting.eval_on == "val":
-    #         (
-    #             _,
-    #             seen_dataloader,
-    #             unseen_dataloader,
-    #             _,
-    #             _,
-    #             seen_keys_dataloader,
-    #             val_unseen_keys_dataloader,
-    #             test_unseen_keys_dataloader,
-    #             all_keys_dataloader,
-    #         ) = load_bioscan_dataloader_all_small_splits(args)
-    #     elif args.inference_and_eval_setting.eval_on == "test":
-    #         (
-    #             _,
-    #             _,
-    #             _,
-    #             seen_dataloader,
-    #             unseen_dataloader,
-    #             seen_keys_dataloader,
-    #             val_unseen_keys_dataloader,
-    #             test_unseen_keys_dataloader,
-    #             all_keys_dataloader,
-    #         ) = load_bioscan_dataloader_all_small_splits(args)
-    #     else:
-    #         raise ValueError(
-    #             "Invalid value for eval_on, specify by 'python inference_and_eval.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_ssl_ver_0_1_2.yaml' inference_and_eval_setting.eval_on=test/val'"
-    #         )
-    # seen_final_pred = pred_dict["encoded_image_feature"]["encoded_dna_feature"]["curr_seen_pred_list"]
-    # unseen_final_pred = pred_dict["encoded_image_feature"]["encoded_dna_feature"]["curr_unseen_pred_list"]
-    # all_unique_seen_species = get_all_unique_species_from_dataloader(seen_keys_dataloader)
-    # all_unique_val_unseen_species = get_all_unique_species_from_dataloader(val_unseen_keys_dataloader)
-    # all_unique_test_unseen_species = get_all_unique_species_from_dataloader(test_unseen_keys_dataloader)
-    # print("For seen")
-    # check_for_acc_about_correct_predict_seen_or_unseen(seen_final_pred, all_unique_seen_species)
-    # print("For unseen")
-    # check_for_acc_about_correct_predict_seen_or_unseen(
-    #     unseen_final_pred, all_unique_val_unseen_species + all_unique_test_unseen_species
-    # )
 
     if args.inference_and_eval_setting.plot_embeddings:
         generate_embedding_plot(

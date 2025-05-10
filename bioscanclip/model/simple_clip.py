@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import timm
 import torch.nn as nn
 from huggingface_hub import hf_hub_download
+from huggingface_hub.errors import HfHubHTTPError
 
 from bioscanclip.model.mlp import MLPEncoder
 from bioscanclip.model.image_encoder import CLIBDImageEncoder
@@ -277,7 +278,7 @@ def initialize_model_and_load_from_checkpoint(args, device=None):
             checkpoint = update_checkpoint_param_names(checkpoint)
             model.load_state_dict(checkpoint)
             print(f"Loaded from hf repo: {args.hf_repo_id}/{hf_model_name}")
-        except:
+        except (FileNotFoundError, ValueError, RuntimeError, HfHubHTTPError) as e:
             # No local checkpoint found and no checkpoint in the Hugging Face Hub
             raise ValueError(
                 "Neither the local checkpoint nor the huggingface checkpoint was found. Please check the config file")

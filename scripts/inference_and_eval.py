@@ -645,7 +645,7 @@ def main(args: DictConfig) -> None:
                         try:
                             group.create_dataset(embedding_type, data=split[embedding_type])
                             print(f"Created dataset for {embedding_type}")
-                        except:
+                        except (ValueError, TypeError, OSError) as e:
                             print(f"Error in creating dataset for {embedding_type}")
                         # group.create_dataset(embedding_type, data=split[embedding_type])
             new_file.close()
@@ -695,7 +695,8 @@ def main(args: DictConfig) -> None:
         seen_keys_dataloader
         val_unseen_keys_dataloader
         test_unseen_keys_dataloader
-    except:
+    except NameError:
+
         if args.inference_and_eval_setting.eval_on == "val":
             (
                 _,
@@ -721,8 +722,9 @@ def main(args: DictConfig) -> None:
                 all_keys_dataloader,
             ) = load_bioscan_dataloader_all_small_splits(args)
         else:
+
             raise ValueError(
-                "Invalid value for eval_on, specify by 'python inference_and_eval.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_ssl_ver_0_1_2.yaml' inference_and_eval_setting.eval_on=test/val'"
+                "Invalid value for eval_on; please specify 'val' or 'test'."
             )
 
 

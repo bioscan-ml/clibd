@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import psutil
 import torch
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from omegaconf import DictConfig
 from tqdm import tqdm
 import h5py
@@ -81,13 +81,18 @@ def check_element(arr):
 
 def process_batch_of_images_to_bytes(args):
     idx, curr_image_name, chunk_number, special_arg_image_dir = args
-    chunk = FILE_NAME_TO_CHUNK_DICT[curr_image_name]
+    try:
+        chunk = FILE_NAME_TO_CHUNK_DICT[curr_image_name]
+    except KeyError as e:
+        return idx, None, None
+
     curr_image_path = os.path.join(special_arg_image_dir, chunk, curr_image_name)
+
     try:
         curr_image = Image.open(curr_image_path)
         curr_image_byte_np = pil_image_to_byte(curr_image)
         return idx, curr_image_byte_np.size, curr_image_byte_np
-    except:
+    except (FileNotFoundError, UnidentifiedImageError, OSError) as e:
         return idx, None, None
 
 
@@ -341,7 +346,7 @@ def main(args: DictConfig) -> None:
                 datasets[dataset_name] = convert_to_numpy_if_list(datasets[dataset_name])
             try:
                 group.create_dataset(dataset_name, data=datasets[dataset_name])
-            except:
+            except (ValueError, TypeError, OSError) as e:
                 check_element(datasets[dataset_name])
                 print("Failed when writ to hdf5")
                 exit()

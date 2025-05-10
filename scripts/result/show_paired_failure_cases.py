@@ -255,13 +255,13 @@ def main(args: DictConfig) -> None:
             for split_name, split in zip(name_of_splits, split_dicts):
                 group = new_file.create_group(split_name)
                 for embedding_type in All_TYPE_OF_FEATURES_OF_KEY:
-                    if embedding_type in split.keys():
+                    if embedding_type in split:
                         try:
+                            # Try to create the HDF5 dataset
                             group.create_dataset(embedding_type, data=split[embedding_type])
                             print(f"Created dataset for {embedding_type}")
-                        except:
-                            print(f"Error in creating dataset for {embedding_type}")
-                        # group.create_dataset(embedding_type, data=split[embedding_type])
+                        except (ValueError, TypeError, OSError) as e:
+                            print(f"Error creating dataset for {embedding_type}: {e}")
             new_file.close()
             total_dict = {
                 "seen_gt_dict": seen_dict["label_list"],
@@ -302,7 +302,7 @@ def main(args: DictConfig) -> None:
         seen_keys_dataloader
         val_unseen_keys_dataloader
         test_unseen_keys_dataloader
-    except:
+    except NameError:
         if args.inference_and_eval_setting.eval_on == "val":
             (
                 _,

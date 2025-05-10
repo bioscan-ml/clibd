@@ -6,6 +6,8 @@ import pandas as pd
 import os
 from matplotlib.backends.backend_pdf import PdfPages
 
+from bioscanclip.util.util import get_acc_list_with_type_and_query_and_key
+
 color_group = {
     'I+D+T seen': '#5778a4',
     'I+D+T unseen': '#5778a4',
@@ -117,18 +119,6 @@ def add_harmonic_mean_acc_to_dict(acc_dict):
                         acc_dict[query][key]['harmonic_mean'][acc_type][topk][level] = harmonic_mean
     return acc_dict
 
-def get_acc_list_with_type_and_query_and_key(acc_dict, acc_type, seen_or_unseen, query, key):
-    acc_list = []
-    for model_name in acc_dict.keys():
-        for split in [seen_or_unseen]:
-            for level in ['order', 'family', 'genus', 'species']:
-                try:
-                    acc_list.append(acc_dict[model_name][query][key][split][acc_type]['1'][level])
-                except:
-                    print(f"Error in getting acc for {model_name} {query} {key} {split} {acc_type} {level}")
-
-
-    return acc_list
 
 def generate_model_name_list(line_description, seen_or_unseen):
     model_name = []

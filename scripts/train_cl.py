@@ -136,8 +136,9 @@ def compute_overall_acc(acc_dict):
                             try:
                                 curr_acc = acc_dict[query_type][key_type][seen_or_unseen][micro_and_macro][k][level]
                                 overall_acc_list.append(curr_acc)
-                            except:
-                                pass
+                            except (KeyError, TypeError) as e:
+                                # Skip if key missing or value is not subscriptable
+                                continue
     overall_acc = sum(overall_acc_list) / len(overall_acc_list)
     return overall_acc
 
