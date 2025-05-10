@@ -19,7 +19,7 @@ model_output_name: test_lora_full_fine_tuning
 evaluation_period: 1
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/full_fine_tuning_one_cycle_lr_sche_with_all_gather/image_dna_text.pth
 output_dim: 768
-port: 29505
+port: 29504
 
 disable_lora: true
 lr_scheduler: one_cycle
