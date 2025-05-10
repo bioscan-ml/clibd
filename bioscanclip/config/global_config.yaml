@@ -32,7 +32,9 @@ insect_data:
   image_dir: ${insect_data.dir}/images
   species_to_other: ${insect_data.dir}/specie_to_other_labels.json
 save_ckpt: true
-bioscan_bert_checkpoint: ${project_root_path}/ckpt/BarcodeBERT/5_mer/model_41.pth
+bioscan_bert_checkpoint: ${project_root_path}/ckpt/BarcodeBERT/old_checkpoints/trained_with_canada_1_5M/model_41.pth
+bioscan_bert_checkpoint_trained_with_canada_1_5_m: ${project_root_path}/ckpt/BarcodeBERT/new_checkpoints/trained_with_5m/BIOSCAN-5M-BEST_k4_6_6_w1_m0_r0.pt
+bioscan_bert_checkpoint_trained_with_bioscan_5_m: ${project_root_path}/ckpt/BarcodeBERT/new_checkpoints/trained_with_canada_1_5M/CANADA-1.5M-BEST_k4_4_4_w1_m0_r0_wd.pt
 model_output_dir: ${project_root_path}/ckpt/bioscan_clip
 
 inference_and_eval_setting:
@@ -65,3 +67,10 @@ general_fine_tune_setting:
 hf_repo_id: bioscan-ml/clibd
 
 default_seed: 42
+
+barcodebert_setting:
+  old_model_setting:
+    k: 5
+    max_len: 660
+
+version: ver_1_0

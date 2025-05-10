@@ -233,9 +233,9 @@ def main(args: DictConfig) -> None:
                         try:
                             group.create_dataset(embedding_type, data=split[embedding_type])
                             print(f"Created dataset for {embedding_type}")
-                        except:
-                            print(f"Error in creating dataset for {embedding_type}")
-                        # group.create_dataset(embedding_type, data=split[embedding_type])
+                        except (ValueError, TypeError, OSError) as e:
+                            print(f"Error creating dataset for {embedding_type}: {e}")
+                            # continue to next embedding_type
             new_file.close()
             total_dict = {
                 "seen_gt_dict": seen_dict["label_list"],
@@ -276,7 +276,7 @@ def main(args: DictConfig) -> None:
         seen_keys_dataloader
         val_unseen_keys_dataloader
         test_unseen_keys_dataloader
-    except:
+    except NameError:
         if args.inference_and_eval_setting.eval_on == "val":
             (
                 _,

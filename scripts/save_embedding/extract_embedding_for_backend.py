@@ -1,20 +1,16 @@
 import os
 
+import h5py
 import hydra
 import numpy as np
 import torch
-from omegaconf import DictConfig
-import h5py
-
-from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.dataset import load_dataloader_for_everything_in_5m
-from bioscanclip.util.util import get_features_and_label
-
-from tqdm import tqdm
-import numpy as np
 import torch.nn.functional as F
+from omegaconf import DictConfig
+from tqdm import tqdm
+
 from bioscanclip.epoch.inference_epoch import convert_label_dict_to_list_of_dict
-import torch
+from bioscanclip.util.dataset import load_dataloader_for_everything_in_5m
+from bioscanclip.model.simple_clip import initialize_model_and_load_from_checkpoint
 
 PLOT_FOLDER = "html_plots"
 RETRIEVAL_FOLDER = "image_retrieval"
@@ -194,16 +190,10 @@ def main(args: DictConfig) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # initialize model
-    print("Initialize model...")
+    model = initialize_model_and_load_from_checkpoint(args)
+    model = model.to(device)
+    model.eval()
 
-    model = load_clip_model(args, device)
-    if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
-        pass
-    else:
-        checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
-        model.load_state_dict(checkpoint)
-
-    print("Model loaded!")
     print("Start processing dataloader...")
 
     pre_train_dataloader, seen_val_dataloader, unseen_val_dataloader, seen_test_dataloader, unseen_test_dataloader, all_keys_dataloader, other_heldout_dataloader = load_dataloader_for_everything_in_5m(

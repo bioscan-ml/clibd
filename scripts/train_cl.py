@@ -20,9 +20,10 @@ from bioscanclip.epoch.train_epoch import train_epoch
 from inference_and_eval import get_features_and_label, inference_and_print_result
 from bioscanclip.model.loss_func import ContrastiveLoss, ClipLoss
 from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.util import set_seed
+from bioscanclip.util.util import set_seed, handle_local_ckpt_path
 from bioscanclip.util.dataset import load_dataloader, load_insect_dataloader
 from bioscanclip.util.util import scale_learning_rate
+import shutil
 
 
 def print_when_rank_zero(message, rank=0):
@@ -135,8 +136,9 @@ def compute_overall_acc(acc_dict):
                             try:
                                 curr_acc = acc_dict[query_type][key_type][seen_or_unseen][micro_and_macro][k][level]
                                 overall_acc_list.append(curr_acc)
-                            except:
-                                pass
+                            except (KeyError, TypeError) as e:
+                                # Skip if key missing or value is not subscriptable
+                                continue
     overall_acc = sum(overall_acc_list) / len(overall_acc_list)
     return overall_acc
 
@@ -327,6 +329,21 @@ def main_process(rank: int, world_size: int, args):
         if stop_flag.item() == 1:
             print(f"Process {rank} stopping at epoch {epoch} due to early stopping")
             break
+
+    # Save the final model for inference and eval.
+    if rank == 0 and args.save_inference:
+        local_ckpt_path = handle_local_ckpt_path(args)
+        if not os.path.exists(local_ckpt_path):
+            name = os.path.basename(local_ckpt_path)
+            root, ext = os.path.splitext(name)
+            if ext:
+                dir_path = os.path.dirname(local_ckpt_path)
+                os.makedirs(local_ckpt_path, exist_ok=True)
+                shutil.copytree(folder_path, dir_path, dirs_exist_ok=True)
+            else:
+                os.makedirs(local_ckpt_path, exist_ok=True)
+                shutil.copytree(folder_path, local_ckpt_path, dirs_exist_ok=True)
+
 
 @hydra.main(config_path="../bioscanclip/config", config_name="global_config", version_base="1.1")
 def main(args: DictConfig) -> None:

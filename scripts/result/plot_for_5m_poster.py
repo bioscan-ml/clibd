@@ -63,8 +63,8 @@ def plot_accuracy(acc_dict, output_folder, experiment_name, acc_type='macro_acc'
     for (query, key), color_map_key in zip(query_key_combinations, color_map.keys()):
         for split in ['seen', 'unseen', 'harmonic mean']:
             try:
-                curr_acc_dict_with_four_level = acc_dict[query][key][split][acc_type]['1']
-            except:
+                return acc_dict[query][key][split][acc_type]['1']
+            except (KeyError, TypeError) as e:
                 continue
 
             curr_acc_list = [curr_acc_dict_with_four_level[level] for level in taxonomy_levels]

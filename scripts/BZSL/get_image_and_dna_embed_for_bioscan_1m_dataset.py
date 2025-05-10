@@ -1,19 +1,18 @@
 import copy
+import datetime
 import json
 import os
-import datetime
+
 import hydra
 import numpy as np
-import scipy.io as sio
 import torch
-import torch.distributed as dist
 import torch.multiprocessing as mp
 from omegaconf import DictConfig
 from tqdm import tqdm
 
-from inference_and_eval import get_features_and_label, inference_and_print_result
 from bioscanclip.model.simple_clip import load_clip_model
 from bioscanclip.util.dataset import load_bioscan_dataloader_all_small_splits
+from bioscanclip.util.util import get_features_and_label
 
 
 def main_process(rank: int, world_size: int, args):

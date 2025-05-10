@@ -115,20 +115,26 @@ def main_process(args):
 
     unseen_dict = get_features_and_label(unseen_dataloader, model, device, for_open_clip=False)
 
-    if args.save_inference and not (os.path.exists(extracted_features_path) and os.path.exists(labels_path)):
-        new_file = h5py.File(extracted_features_path, "w")
-        name_of_splits = ["seen", "unseen", "key"]
-        split_dicts = [seen_dict, unseen_dict, keys_dict]
-        for split_name, split in zip(name_of_splits, split_dicts):
-            group = new_file.create_group(split_name)
-            for embedding_type in All_TYPE_OF_FEATURES_OF_KEY:
-                if embedding_type in split.keys():
-                    try:
-                        group.create_dataset(embedding_type, data=split[embedding_type])
-                        print(f"Created dataset for {embedding_type}")
-                    except:
-                        print(f"Error in creating dataset for {embedding_type}")
-                    # group.create_dataset(embedding_type, data=split[embedding_type])
+    if args.save_inference and not (
+            os.path.exists(extracted_features_path)
+            and os.path.exists(labels_path)
+    ):
+        # Open (or create) the HDF5 file for writing
+        with h5py.File(extracted_features_path, "w") as new_file:
+            name_of_splits = ["seen", "unseen", "key"]
+            split_dicts = [seen_dict, unseen_dict, keys_dict]
+
+            for split_name, split in zip(name_of_splits, split_dicts):
+                group = new_file.create_group(split_name)
+                for embedding_type in All_TYPE_OF_FEATURES_OF_KEY:
+                    if embedding_type in split:
+                        try:
+                            # Attempt to create the dataset
+                            group.create_dataset(embedding_type, data=split[embedding_type])
+                            print(f"Created dataset for {embedding_type}")
+                        except (ValueError, TypeError, OSError) as e:
+                            # Only catch dataset-creation errors
+                            print(f"Error creating dataset for {embedding_type}: {e}")
         new_file.close()
         total_dict = {
             "seen_gt_dict": seen_dict["label_list"],

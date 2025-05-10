@@ -96,18 +96,9 @@ debug_flag: false
 
 Download checkpoint for BarcodeBERT and bioscan_clip and place them under `ckpt`.  
 ```shell
+pip install huggingface-cli
 # From project folder
-mkdir -p ckpt/BarcodeBERT/5_mer
-cd ckpt/BarcodeBERT/5_mer
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/BarcodeBERT/model_41.pth
-cd ../../..
-mkdir -p ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
-cd ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/best.pth
-cd ../../../..
-mkdir -p ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
-cd ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/best.pth
+huggingface-cli download bioscan-ml/clibd --include "ckpt/*" --local-dir .
 ```
 
 You can also check this [link](https://huggingface.co/bioscan-ml/clibd/tree/main) to download the files manually.
@@ -245,6 +236,14 @@ If you use CLIBD in your research, please cite:
     url={https://openreview.net/forum?id=d5HUnyByAI},
 }
 ```
+
+# Version log
+
+## Version 1.0 (Current version)
+
+- Release for the initial ICLR camera-ready submission
+- Support loading the checkpoint from Hugging Face when no checkpoint is found in the local path
+
 
 # Acknowledgements
 We would like to express our gratitude for the use of the INSECT dataset, which played a pivotal role in the completion of our experiments. Additionally, we acknowledge the use and modification of code from the [Fine-Grained-ZSL-with-DNA](https://github.com/sbadirli/Fine-Grained-ZSL-with-DNA) repository, which facilitated part of our experimental work. The contributions of these resources have been invaluable to our project, and we appreciate the efforts of all developers and researchers involved.

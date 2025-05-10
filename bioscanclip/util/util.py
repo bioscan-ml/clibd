@@ -19,6 +19,7 @@ from PIL import Image
 import io
 from itertools import product
 from torchtext.vocab import vocab as build_vocab_from_dict
+import timm
 
 
 LEVELS = ["order", "family", "genus", "species"]
@@ -533,9 +534,10 @@ def make_prediction(query_feature, keys_feature, keys_label, with_similarity=Fal
             for i in key_indices:
                 try:
                     k_pred_in_diff_level[level].append(keys_label[i][level])
-                except:
+                except (KeyError, IndexError, TypeError) as e:
                     print(keys_label)
-                    exit()
+                    print(f"Error appending predicted label at level '{level}': {e}")
+                    sys.exit(1)
         pred_list.append(k_pred_in_diff_level)
 
     out = [pred_list]
@@ -607,18 +609,22 @@ def inference_and_print_result(keys_dict, seen_dict, unseen_dict, args, small_sp
     seen_gt_label = seen_dict["label_list"]
     unseen_gt_label = unseen_dict["label_list"]
     keys_label = keys_dict["label_list"]
+
     try:
+        # Try to build pred_dict from the "processed_id_list" keys
         pred_dict = {
             "seen_id": seen_dict["processed_id_list"],
             "seen_gt_label": seen_gt_label,
             "unseen_id": unseen_dict["processed_id_list"],
             "unseen_gt_label": unseen_gt_label,
         }
-    except:
+    except KeyError as e:
+        # Fallback if "processed_id_list" is missing in either dict
+        # Use .get() to avoid another KeyError; default to empty list if even file_name_list is missing
         pred_dict = {
-            "seen_id": seen_dict["file_name_list"],
+            "seen_id": seen_dict.get("file_name_list", []),
             "seen_gt_label": seen_gt_label,
-            "unseen_id": unseen_dict["file_name_list"],
+            "unseen_id": unseen_dict.get("file_name_list", []),
             "unseen_gt_label": unseen_gt_label,
         }
 
@@ -766,9 +772,12 @@ def find_closest_match(query_feature, keys_feature, keys_label, with_similarity=
             for i in key_indices:
                 try:
                     k_pred_in_diff_level[level].append(keys_label[i][level])
-                except:
+                except (KeyError, IndexError, TypeError) as e:
+                    # Print the entire keys_label for debugging
                     print(keys_label)
-                    exit()
+                    # Report specific exception before exiting
+                    print(f"Error appending label at level '{level}': {e}")
+                    sys.exit(1)
         pred_list.append(k_pred_in_diff_level)
 
     out = [pred_list]
@@ -937,3 +946,36 @@ def update_checkpoint_param_names(checkpoint):
         new_checkpoint[new_name] = tensor
 
     return new_checkpoint
+
+
+def handle_local_ckpt_path(args):
+    local_ckpt_path = None
+    if hasattr(args.model_config, "ckpt_path"):
+        local_ckpt_path = args.model_config.ckpt_path
+    else:
+        local_ckpt_path = f"{args.project_root_path}/ckpt/bioscan_clip/{args.version}/{args.model_config.dataset}/{args.model_config.model_output_name}/best.pth"
+
+    # check for best or last checkpoint, if ckpt_path is not specified to a exact file.
+    if os.path.exists(os.path.join(local_ckpt_path, "best.pth")):
+        local_ckpt_path = os.path.join(local_ckpt_path, "best.pth")
+    elif os.path.exists(os.path.join(local_ckpt_path, "last.pth")):
+        local_ckpt_path = os.path.join(local_ckpt_path, "last.pth")
+    return local_ckpt_path
+
+def get_acc_list_with_type_and_query_and_key(acc_dict, acc_type, seen_or_unseen, query, key):
+    """
+    Retrieve accuracy list for the given model, query, key, split, acc_type, and levels.
+    Returns a list of accuracy values or an empty list if entries are missing or invalid.
+    """
+    acc_list = []
+    for model_name in acc_dict.keys():
+        for split in [seen_or_unseen]:
+            for level in ['order', 'family', 'genus', 'species']:
+                try:
+                    # Attempt to get accuracy from nested dict structure
+                    acc_val = acc_dict[model_name][query][key][split][acc_type]['1'][level]
+                    acc_list.append(acc_val)
+                except (KeyError, TypeError) as e:
+                    # Skip missing keys or invalid types without stopping the program
+                    continue
+    return acc_list

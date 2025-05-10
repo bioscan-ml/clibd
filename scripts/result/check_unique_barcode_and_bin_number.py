@@ -1,32 +1,10 @@
-import io
-import json
 import os
-import random
-from collections import Counter, defaultdict
 
 import h5py
 import hydra
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-import plotly
-import plotly.express as px
-import torch
-from PIL import Image
-from omegaconf import DictConfig
-from sklearn.metrics import silhouette_samples
-from umap import UMAP
-
-from bioscanclip.model.simple_clip import load_clip_model
-from bioscanclip.util.dataset import load_bioscan_dataloader_all_small_splits
-from bioscanclip.util.util import (
-    categorical_cmap,
-    inference_and_print_result,
-    get_features_and_label,
-    make_prediction,
-    All_TYPE_OF_FEATURES_OF_KEY,
-)
 import pandas as pd
+from omegaconf import DictConfig
+
 
 @hydra.main(config_path="../../bioscanclip/config", config_name="global_config", version_base="1.1")
 def main(args: DictConfig) -> None:
