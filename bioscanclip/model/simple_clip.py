@@ -30,6 +30,10 @@ class SimpleCLIP(nn.Module):
         else:
             self.logit_bias = None
 
+        if self.open_clip_model is not None:
+            # TODO: find a better way to get the output dimension for different encoders.
+            self.dna_projection = nn.Linear(768, 512)
+
     def forward(self, image_input, dna_input, language_input):
         image_output = None
         dna_output = None
@@ -37,7 +41,10 @@ class SimpleCLIP(nn.Module):
 
 
         if self.dna_encoder is not None:
-            dna_output = F.normalize(self.dna_encoder(dna_input), p=2, dim=-1)
+            dna_output = self.dna_encoder(dna_input)
+            if self.open_clip_model is not None:
+                dna_output = dna_output @ self.dna_projection
+            dna_output = F.normalize(dna_output, p=2, dim=-1)
 
         if self.open_clip_model is not None:
             if image_input is not None:
