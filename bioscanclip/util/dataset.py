@@ -414,7 +414,7 @@ def construct_dataloader(
         dna_type = args.model_config.dna.input_type
 
     if dna_type == "sequence":
-        if hasattr(args.model_config, "pre_train_for_barcode_bert") and (args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
+        if hasattr(args.model_config, "pre_train_for_barcode_bert") and (args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "CANADA-1-5M"):
             pass
         else:
 
