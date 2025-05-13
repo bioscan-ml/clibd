@@ -7,14 +7,8 @@ dataset: bioscan_1m
 
 image:
   input_type: image
-  model: lora_vit
+  model: vit
   image_encoder_trained_with_simclr_style_ckpt_path: ${project_root_path}/ckpt/uni_model/uni_model/image/image_simclr_style_bioscan_1m/model_best.pth.tar
-dna:
-  input_type: sequence
-  model: lora_barcode_bert
-language:
-  input_type: sequence
-  model: lora_bert
 
 model_output_name: image_dna_text_4gpu_with_pre_trained_image_encoder_trained_with_simclr_style
 evaluation_period: 1
