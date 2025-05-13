@@ -6,13 +6,13 @@ dataset: bioscan_1m
 
 image:
   input_type: image
-  model: lora_vit
+  model: vit
 dna:
   input_type: sequence
-  model: lora_barcode_bert
+  model: barcode_bert
 language:
   input_type: sequence
-  model: lora_bert
+  model: bert_small
 
 model_output_name: trained_with_bioscan_1m_image_dna_text_without_open_clip
 evaluation_period: 1
