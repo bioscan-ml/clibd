@@ -419,7 +419,6 @@ def construct_dataloader(
         args,
         split,
         length,
-        sequence_pipeline,
         return_language=False,
         labels=None,
         for_pre_train=False,
