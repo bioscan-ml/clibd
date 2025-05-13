@@ -27,17 +27,16 @@ class SimpleCLIP(nn.Module):
         self.language_encoder = language_encoder
         self.open_clip_model = open_clip_model
         self.tokenizer_for_open_clip = open_clip.get_tokenizer('ViT-B-32') if open_clip_model is not None else None
-        if for_bio_clip:
+        self.for_bio_clip = for_bio_clip
+        if self.for_bio_clip:
             self.tokenizer_for_open_clip = open_clip.get_tokenizer('hf-hub:imageomics/bioclip') if open_clip_model is not None else None
+            self.dna_projection = nn.Linear(768, 512)
         self.logit_scale = nn.Parameter(torch.ones([]) * init_logit_scale)
         if init_logit_bias is not None:
             self.logit_bias = nn.Parameter(torch.ones([]) * init_logit_bias)
         else:
             self.logit_bias = None
 
-        if self.open_clip_model is not None:
-            # TODO: find a better way to get the output dimension for different encoders.
-            self.dna_projection = nn.Linear(768, 512)
 
     def forward(self, image_input, dna_input, language_input):
         image_output = None
