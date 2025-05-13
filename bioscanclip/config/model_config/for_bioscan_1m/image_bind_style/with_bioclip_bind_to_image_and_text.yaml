@@ -24,7 +24,7 @@ model_output_name: image_dna_text_4gpu_image_text_bind_style
 evaluation_period: 1
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/image_dna_text_4gpu_image_text_bind_style/2024-11-22_230009/best.pth
 output_dim: 512
-port: 29531
+port: 29532
 
 disable_lora: true
 lr_scheduler: one_cycle

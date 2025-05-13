@@ -17,7 +17,7 @@ model_output_name: trained_with_bioscan_1m_image_dna_text_with_pretrained_clip_i
 evaluation_period: 1
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/open_clip_ablation/with_open_clip_image_text_only/best.pth
 output_dim: 768
-port: 12346
+port: 12347
 
 for_open_clip: true
 lr_scheduler: one_cycle

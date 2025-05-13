@@ -20,7 +20,7 @@ model_output_name: trained_with_bioscan_1m_image_dna_text_without_open_clip_vit_
 evaluation_period: 1
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/open_clip_ablation/without_open_clip_vit_large_patch16_224/best.pth
 output_dim: 768
-port: 12345
+port: 12348
 
 disable_lora: true
 lr_scheduler: one_cycle
