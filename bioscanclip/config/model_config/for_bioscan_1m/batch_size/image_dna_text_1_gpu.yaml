@@ -14,7 +14,6 @@ dna:
 language:
   input_type: sequence
   model: bert_small
-
 model_output_name: image_dna_text_1gpu_batch_size_analysis
 evaluation_period: 1
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/batch_size_analysis/image_dna_text_1gpu/best.pth
