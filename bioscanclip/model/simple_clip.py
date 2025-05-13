@@ -66,7 +66,10 @@ class SimpleCLIP(nn.Module):
             if self.language_encoder is not None:
                 language_output = F.normalize(self.language_encoder(language_input), p=2, dim=-1)
 
-        import pdb; pdb.set_trace()
+        print(dna_output.shape)
+        print(image_output.shape)
+        print(language_output.shape)
+        exit()
 
         return image_output, dna_output, language_output, self.logit_scale.exp(), self.logit_bias
 
