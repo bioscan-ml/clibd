@@ -5,6 +5,8 @@ wandb_project_name: BIOSCAN-CLIP-small_experiments
 using_train_seen_for_pre_train: true
 dataset: bioscan_1m
 
+no_image_text_loss: true
+
 image:
   input_type: image
   model: vit
