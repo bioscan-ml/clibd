@@ -67,3 +67,10 @@ general_fine_tune_setting:
 hf_repo_id: bioscan-ml/clibd
 
 default_seed: 42
+
+barcodebert_setting:
+  old_model_setting:
+    k: 5
+    max_len: 660
+
+version: ver_1_1
