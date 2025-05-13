@@ -46,7 +46,7 @@ class SimpleCLIP(nn.Module):
 
         if self.dna_encoder is not None:
             dna_output = self.dna_encoder(dna_input)
-            if self.open_clip_model is not None:
+            if self.for_bio_clip:
                 dna_output = self.dna_projection(dna_output)
             dna_output = F.normalize(dna_output, p=2, dim=-1)
 
