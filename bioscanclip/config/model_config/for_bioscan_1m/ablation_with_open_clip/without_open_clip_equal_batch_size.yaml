@@ -1,25 +1,26 @@
 batch_size: 200
 epochs: 15
-labels_for_driven_positive_and_negative_pairs:
 wandb_project_name: BIOSCAN-CLIP-ablation_with_open_clip
 using_train_seen_for_pre_train: true
 dataset: bioscan_1m
-disable_lora: true 
 
 image:
   input_type: image
-  model: clip_image
+  model: lora_vit
+dna:
+  input_type: sequence
+  model: lora_barcode_bert
 language:
   input_type: sequence
-  model: clip_text
+  model: lora_bert
 
-model_output_name: trained_with_bioscan_1m_image_dna_text_with_pretrained_clip_image_text
+model_output_name: trained_with_bioscan_1m_image_dna_text_without_open_clip
 evaluation_period: 1
-ckpt_path: ${project_root_path}/ckpt/bioscan_clip/open_clip_ablation/with_open_clip_image_text_only/best.pth
+ckpt_path: ${project_root_path}/ckpt/bioscan_clip/open_clip_ablation/without_open_clip_38_epoch/best.pth
 output_dim: 768
-port: 12346
+port: 12345
 
-for_open_clip: true
+disable_lora: true
 lr_scheduler: one_cycle
 lr_config:
   lr: 0.000001
@@ -30,8 +31,8 @@ loss_setup:
   gather_with_grad: true
   use_horovod: false
   local_loss: false
-fix_temperature: true
 
 eval_skip_epoch: 10
 
+fix_temperature: true
 amp: true

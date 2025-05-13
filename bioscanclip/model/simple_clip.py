@@ -141,7 +141,7 @@ def load_clip_model(args, device=None):
     if hasattr(args.model_config, 'for_bio_clip'):
         for_bio_clip = args.model_config.for_bio_clip
 
-    if (using_open_clip or (image_model == "lora_clip_image" and language_model == "lora_clip_text")) and not for_bio_clip:
+    if (using_open_clip or (image_model == "clip_image" and language_model == "clip_text")) and not for_bio_clip:
         open_clip_model, _, _ = open_clip.create_model_and_transforms('ViT-L/14', pretrained='commonpool_xl_laion_s13b_b90k')
         open_clip_model.to(device)
         if not disable_lora:
