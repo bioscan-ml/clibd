@@ -1,13 +1,11 @@
+import math
+
+import torch
 import torch.nn as nn
+from loratorch.layers import MultiheadAttention as LoRA_MultiheadAttention
 from timm.models.vision_transformer import VisionTransformer
 from torch import Tensor
-import torch
-from safetensors import safe_open
-from safetensors.torch import save_file
-from torch.nn.parameter import Parameter
-import math
-from loratorch.layers import MultiheadAttention as LoRA_MultiheadAttention
-import copy
+
 from bioscanclip.util.util import create_child_from_parent
 
 

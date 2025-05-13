@@ -23,9 +23,10 @@ from bioscanclip.util.util import (
     get_features_and_label,
     make_prediction,
     All_TYPE_OF_FEATURES_OF_KEY,
+    handle_local_ckpt_path
 )
 from huggingface_hub import hf_hub_download
-from bioscanclip.util.util import update_checkpoint_param_names
+from bioscanclip.model.simple_clip import update_checkpoint_param_names, initialize_model_and_load_from_checkpoint
 
 PLOT_FOLDER = "html_plots"
 RETRIEVAL_FOLDER = "image_retrieval"
@@ -534,10 +535,6 @@ def check_for_acc_about_correct_predict_seen_or_unseen(final_pred_list, species_
 @hydra.main(config_path="../bioscanclip/config", config_name="global_config", version_base="1.1")
 def main(args: DictConfig) -> None:
     args.save_inference = True
-    if os.path.exists(os.path.join(args.model_config.ckpt_path, "best.pth")):
-        args.model_config.ckpt_path = os.path.join(args.model_config.ckpt_path, "best.pth")
-    elif os.path.exists(os.path.join(args.model_config.ckpt_path, "last.pth")):
-        args.model_config.ckpt_path = os.path.join(args.model_config.ckpt_path, "last.pth")
 
     folder_for_saving = os.path.join(
         args.project_root_path, "extracted_embedding", args.model_config.dataset, args.model_config.model_output_name
@@ -589,32 +586,9 @@ def main(args: DictConfig) -> None:
 
     else:
         # initialize model
-        print("Initialize model...")
-
-        model = load_clip_model(args, device)
-
-        if hasattr(args.model_config, "load_ckpt") and args.model_config.load_ckpt is False:
-            pass
-        elif os.path.exists(args.model_config.ckpt_path) or hasattr(args.model_config, "hf_model_name"):
-            if os.path.exists(args.model_config.ckpt_path):
-                print(f"Loading model from {args.model_config.ckpt_path}")
-                checkpoint = torch.load(args.model_config.ckpt_path, map_location="cuda:0")
-
-            elif hasattr(args.model_config, "hf_model_name"):
-                checkpoint_path = hf_hub_download(
-                    repo_id=args.hf_repo_id,
-                    filename=args.model_config.hf_model_name,
-                )
-                print(f"Loading model from {args.hf_repo_id}/{args.model_config.hf_model_name}")
-                checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-
-            checkpoint = update_checkpoint_param_names(checkpoint)
-            model.load_state_dict(checkpoint)
-
-        else:
-            raise ValueError("No checkpoint found. Please specify a valid checkpoint path.")
-
-
+        model = initialize_model_and_load_from_checkpoint(args, device=device)
+        model = model.to(device)
+        model.eval()
 
         # Load data
         # args.model_config.batch_size = 24
@@ -671,7 +645,7 @@ def main(args: DictConfig) -> None:
                         try:
                             group.create_dataset(embedding_type, data=split[embedding_type])
                             print(f"Created dataset for {embedding_type}")
-                        except:
+                        except (ValueError, TypeError, OSError) as e:
                             print(f"Error in creating dataset for {embedding_type}")
                         # group.create_dataset(embedding_type, data=split[embedding_type])
             new_file.close()
@@ -721,7 +695,8 @@ def main(args: DictConfig) -> None:
         seen_keys_dataloader
         val_unseen_keys_dataloader
         test_unseen_keys_dataloader
-    except:
+    except NameError:
+
         if args.inference_and_eval_setting.eval_on == "val":
             (
                 _,
@@ -747,8 +722,9 @@ def main(args: DictConfig) -> None:
                 all_keys_dataloader,
             ) = load_bioscan_dataloader_all_small_splits(args)
         else:
+
             raise ValueError(
-                "Invalid value for eval_on, specify by 'python inference_and_eval.py 'model_config=lora_vit_lora_barcode_bert_lora_bert_ssl_ver_0_1_2.yaml' inference_and_eval_setting.eval_on=test/val'"
+                "Invalid value for eval_on; please specify 'val' or 'test'."
             )
 
 

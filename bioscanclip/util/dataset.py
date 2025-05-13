@@ -138,7 +138,7 @@ class Dataset_for_CL(Dataset):
         if hasattr(args.model_config, "train_with_small_subset"):
             self.pre_train_with_small_set = args.model_config.train_with_small_subset
         self.dna_tokenizer = dna_tokenizer
-        
+
 
         if self.for_open_clip:
             # self.tokenizer = open_clip.get_tokenizer('ViT-B-32')
@@ -419,6 +419,7 @@ def construct_dataloader(
         args,
         split,
         length,
+        sequence_pipeline,
         return_language=False,
         labels=None,
         for_pre_train=False,

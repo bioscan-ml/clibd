@@ -190,15 +190,16 @@ def plot_figure(org_image_list, before_alignment_image_list, after_alignment_ima
     for row, img_list in enumerate(resized_image_lists):
         for col in range(max_cols):
             ax = axes[row][col] if len(resized_image_lists) > 1 else axes[col]
+            ax.set_aspect('auto')
             if col < len(img_list):
                 ax.imshow(img_list[col])
+                print(f"Image {row} {col} size: {img_list[col].size}")
                 ax.axis('off')
             else:
                 ax.axis('off')
-        # axes[row][0].text(0.05, 0.95, row_titles[row],
-        #                   transform=axes[row][0].transAxes,
-        #                   fontsize=18, fontweight='bold', color='black',
-        #                   verticalalignment='top', horizontalalignment='left')
+        for ax in axes[row]:
+            ax.set_ylim(0, target_height)
+
 
     plt.tight_layout()
     plt.show()

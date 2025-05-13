@@ -14,8 +14,7 @@ dna:
 
 model_output_name: image_dna_4gpu
 evaluation_period: 1
-ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_ckpt_from_rerun/from_venus_08/main_experiments/bioscan_1m/I_D/best.pth
-hf_model_name: ckpt/bioscan_clip/final_experiments/image_dna_4gpu_50epoch/best.pth
+ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_ckpt_from_rerun/main_experiments/bioscan_1m/I_D/best.pth
 output_dim: 768
 port: 29532
 

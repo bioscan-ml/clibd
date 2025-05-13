@@ -34,12 +34,12 @@ We provide pretrained embeddings and model weights.  We evaluate our models by e
 
 | Training data |  Aligned modalities |  Embeddings |  Model  | Config |
 |---------------|---------------------|-------------|---------|--------|
-| BIOSCAN-1M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/no_alignment/extracted_feature_from_test_split.hdf5) |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_no_loading.yaml)  |
-| BIOSCAN-1M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna/extracted_feature_from_test_split.hdf5)|  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna/best.pth)   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_seed_42.yaml)  |
-| BIOSCAN-1M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/extracted_feature_from_test_split.hdf5)       |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/best.pth) |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml) |
-| BIOSCAN-5M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/no_alignment/extracted_feature_from_test_split.hdf5)       |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/no_alignment_baseline/no_align.yaml)  |
-| BIOSCAN-5M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna/best.pth)    |  [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_seed_42.yaml)  |
-| BIOSCAN-5M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/extracted_feature_from_val_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/best.pth)|   [Link](https://github.com/bioscan-ml/clibd/blob/main/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_text_seed_42.yaml)  |
+| BIOSCAN-1M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/no_alignment/extracted_feature_from_test_split.hdf5) |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/45f38fc/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_no_loading.yaml)  |
+| BIOSCAN-1M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna/extracted_feature_from_test_split.hdf5)|  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna/best.pth)   |  [Link](https://github.com/bioscan-ml/clibd/blob/45f38fc/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_seed_42.yaml)  |
+| BIOSCAN-1M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna_text/extracted_feature_from_test_split.hdf5)       |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/image_dna_text/best.pth) |  [Link](https://github.com/bioscan-ml/clibd/blob/45f38fc/bioscanclip/config/model_config/for_bioscan_1m/final_experiments/image_dna_text_seed_42.yaml) |
+| BIOSCAN-5M    |  None               |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/no_alignment/extracted_feature_from_test_split.hdf5)       |  N/A   |  [Link](https://github.com/bioscan-ml/clibd/blob/45f38fc/bioscanclip/config/model_config/for_bioscan_5m/no_alignment_baseline/no_align.yaml)  |
+| BIOSCAN-5M    |  **I**mage + **D**NA        |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna/extracted_feature_from_test_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna/best.pth)    |  [Link](https://github.com/bioscan-ml/clibd/blob/45f38fc/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_seed_42.yaml)  |
+| BIOSCAN-5M    |  **I**mage + **D**NA + **T**ax  |  [Embedding](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna_text/extracted_feature_from_test_split.hdf5)      |  [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/ver_1_0/bioscan_5m/image_dna_text/best.pth)|   [Link](https://github.com/bioscan-ml/clibd/blob/45f38fc/bioscanclip/config/model_config/for_bioscan_5m/final_experiments/image_dna_text_seed_42.yaml)  |
 
 We also provide checkpoints trained with LoRA layers. You can download them from this [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/bioscan_clip/lora_version_ckpt.zip)
 
@@ -96,20 +96,12 @@ debug_flag: false
 
 Download checkpoint for BarcodeBERT and bioscan_clip and place them under `ckpt`.  
 ```shell
+pip install huggingface-cli
 # From project folder
-mkdir -p ckpt/BarcodeBERT/5_mer
-cd ckpt/BarcodeBERT/5_mer
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/clip_project/ckpt/BarcodeBERT/model_41.pth
-cd ../../..
-mkdir -p ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
-cd ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/image_dna_text/best.pth
-cd ../../../..
-mkdir -p ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
-cd ckpt/bioscan_clip/new_5M_training/trained_with_5M_image_dna_text
-wget https://aspis.cmpt.sfu.ca/projects/bioscan/checkpoint/for_readme/bioscan_5m/image_dna_text/best.pth
+huggingface-cli download bioscan-ml/clibd --include "ckpt/*" --local-dir .
 ```
-For downloading all CLIBD pre-trained models: [Link](https://aspis.cmpt.sfu.ca/projects/bioscan/BIOSCAN_CLIP_for_downloading/ckpt.zip)
+
+You can also check this [link](https://huggingface.co/bioscan-ml/clibd/tree/main) to download the files manually.
 
 ## Train
 
@@ -234,17 +226,24 @@ python scripts/flattenCsv.pya -i PATH_TO_RESULTS_CSV -o PATH_TO_FLATTEN_CSV
 # Citing CLIBD
 If you use CLIBD in your research, please cite:
 ```bibtex
-@article{gong2024clibd,
-  title={{CLIBD}: Bridging Vision and Genomics for Biodiversity Monitoring at Scale},
-  author={Gong, ZeMing and Wang, Austin T. and Huo, Xiaoliang and Haurum, Joakim Bruslund and Lowe, Scott C. and Taylor, Graham W. and Chang, Angel X.},
-  journal={arXiv preprint arXiv:2405.17537},
-  year={2024},
-  eprint={2405.17537},
-  archivePrefix={arXiv},
-  primaryClass={cs.AI},
-  doi={10.48550/arxiv.2405.17537},
+@inproceedings{gong2025clibd,
+    title={{CLIBD}: Bridging Vision and Genomics for Biodiversity Monitoring at Scale},
+    author={ZeMing Gong and Austin Wang and Xiaoliang Huo and Joakim Bruslund Haurum
+        and Scott C. Lowe and Graham W. Taylor and Angel X Chang
+    },
+    booktitle={The Thirteenth International Conference on Learning Representations},
+    year={2025},
+    url={https://openreview.net/forum?id=d5HUnyByAI},
 }
 ```
+
+# Version log
+
+## Version 1.0 (Current version)
+
+- Release for the initial ICLR camera-ready submission
+- Support loading the checkpoint from Hugging Face when no checkpoint is found in the local path
+
 
 # Acknowledgements
 We would like to express our gratitude for the use of the INSECT dataset, which played a pivotal role in the completion of our experiments. Additionally, we acknowledge the use and modification of code from the [Fine-Grained-ZSL-with-DNA](https://github.com/sbadirli/Fine-Grained-ZSL-with-DNA) repository, which facilitated part of our experimental work. The contributions of these resources have been invaluable to our project, and we appreciate the efforts of all developers and researchers involved.

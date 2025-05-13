@@ -4,7 +4,7 @@ labels_for_driven_positive_and_negative_pairs:
 wandb_project_name: BIOSCAN-CLIP-5M
 using_train_seen_for_pre_train: true
 dataset: bioscan_5m
-pre_train_for_barcode_bert: BIOSCAN-1M
+pre_train_for_barcode_bert: CANADA-1-5M
 image:
   input_type: image
   pre_train_model: vit_base_patch16_224
