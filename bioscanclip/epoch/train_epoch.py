@@ -59,17 +59,14 @@ def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimize
 
         epoch_loss = epoch_loss + loss.item()
 
-        allocated_memory = torch.cuda.memory_allocated()
         memory_total = torch.cuda.get_device_properties(device).total_memory
-        cached_memory = torch.cuda.memory_reserved(device)
-
-        total_used_memory = allocated_memory + cached_memory
+        memory_reserved = torch.cuda.memory_reserved(device)
 
         current_lr = optimizer.param_groups[0]['lr']
 
         if rank == 0:
             pbar.set_description(
-                f'Epoch: {epoch}||Step: {step}/{total_step}||Loss: {loss.item()} || Total Used CUDA Memory: {total_used_memory / (1024 ** 3):.2f} GB || Total CUDA Memory: {memory_total / (1024 ** 3):.2f} GB || Current LR: {current_lr}')
+                f'Epoch: {epoch}||Step: {step}/{total_step}||Loss: {loss.item()} || Total Used CUDA Memory: {memory_reserved / (1024 ** 3):.2f} GB || Total CUDA Memory: {memory_total / (1024 ** 3):.2f} GB || Current LR: {current_lr}')
 
             if activate_wandb:
                 wandb.log({"loss": loss.item(), "step": step + epoch * len(dataloader), "learning_rate": current_lr})
