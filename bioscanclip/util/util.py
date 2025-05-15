@@ -930,3 +930,7 @@ def get_acc_list_with_type_and_query_and_key(acc_dict, acc_type, seen_or_unseen,
                     # Skip missing keys or invalid types without stopping the program
                     continue
     return acc_list
+
+def print_when_rank_zero(message, rank=0):
+    if rank is None or rank == 0:
+        print(message)

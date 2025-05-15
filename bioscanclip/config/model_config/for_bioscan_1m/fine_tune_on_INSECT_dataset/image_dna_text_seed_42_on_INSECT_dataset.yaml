@@ -7,19 +7,19 @@ dataset: INSECT
 
 image:
   input_type: image
-  model: lora_vit
+  model: vit
 dna:
   input_type: sequence
-  model: lora_barcode_bert
+  model: barcode_bert
 language:
   input_type: sequence
-  model: lora_bert
+  model: bert_small
 
 model_output_name: image_dna_text_4gpu_fine_tune_on_INSECT_dataset
 evaluation_period: 1
 
 
-pretrained_ckpt_path: ${project_root_path}/ckpt/bioscan_clip/final_experiments/image_dna_text_4gpu_50epoch/best.pth
+pretrained_ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_ckpt_from_rerun/main_experiments/bioscan_1m/I_D_T/best.pth
 ckpt_path: ${project_root_path}/ckpt/bioscan_clip/image_dna_text_4gpu_fine_tune_on_INSECT_dataset/best.pth
 
 use_ckpt_fine_tuned_on_INSECT_dataset: true
