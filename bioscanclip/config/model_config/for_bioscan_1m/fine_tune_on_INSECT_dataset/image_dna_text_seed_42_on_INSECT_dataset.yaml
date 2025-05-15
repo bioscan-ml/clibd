@@ -1,4 +1,4 @@
-batch_size: 300
+batch_size: 250
 epochs: 80
 labels_for_driven_positive_and_negative_pairs:
 wandb_project_name: BIOSCAN-CLIP_fine_tune_on_INSECT_dataset
