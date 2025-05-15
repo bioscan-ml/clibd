@@ -1060,14 +1060,19 @@ class INSECTDataset(Dataset):
         curr_image = self.load_image(image_id)
 
         # prepare dna input
-        dna_barcode = row["barcode"]
-        print(f"DNA barcode: {dna_barcode}")
-        exit()
-        dna_barcode = torch.tensor(dna_barcode, dtype=torch.int64)
+        curr_dna_input = row["barcode"]
+        if self.dna_tokenizer is not None:
+            curr_dna_input = self.dna_tokenizer(curr_dna_input)
+            curr_dna_input['input_ids'] = torch.tensor(curr_dna_input['input_ids'])
+        else:
+            raise TypeError(
+                f"DNA input type is sequence, but dna_tokenizer is None. Please check the config file."
+            )
+
 
         label = self.labels[index]
 
-        return image_id, curr_image, dna_barcode, self.input_ids[index], self.attention_mask[index], \
+        return image_id, curr_image, curr_dna_input, self.input_ids[index], self.attention_mask[index], \
             self.token_type_ids[index], label
 
 
