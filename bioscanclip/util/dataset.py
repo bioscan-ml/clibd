@@ -946,9 +946,11 @@ def species_list_to_labels(species_list, species_to_others):
 
 class INSECTDataset(Dataset):
     def __init__(self, path_to_att_splits_mat, path_to_res_101_mat, image_hdf5_path, species_to_others,
-                 split, for_training=False, cl_label=False, for_open_clip=False, **kwargs) -> None:
+                 split, for_training=False, cl_label=False, for_open_clip=False, dna_tokenizer=None, **kwargs) -> None:
         super().__init__()
         # self.metadata = pd.read_csv(metadata, sep="\t")
+
+        self.dna_tokenizer = dna_tokenizer
 
         att_splits_mat = sio.loadmat(path_to_att_splits_mat)
         res_101_mat = sio.loadmat(path_to_res_101_mat)
@@ -982,7 +984,6 @@ class INSECTDataset(Dataset):
         self.token_type_ids = batch_encoded.get('token_type_ids')
         self.metadata = pd.DataFrame.from_dict({"image_id": image_ids, "barcode": barcodes, "species": species})
 
-        # self.images = INSECTDataset.compile_images(image_folder)
         self.images = image_hdf5_path
         self.for_open_clip = for_open_clip
 
@@ -1060,6 +1061,8 @@ class INSECTDataset(Dataset):
 
         # prepare dna input
         dna_barcode = row["barcode"]
+        print(f"DNA barcode: {dna_barcode}")
+        exit()
         dna_barcode = torch.tensor(dna_barcode, dtype=torch.int64)
 
         label = self.labels[index]
@@ -1073,6 +1076,18 @@ def load_insect_dataloader_trainval(args, num_workers=8, shuffle_for_train_seen_
     with open(filename, 'r') as file:
         specie_to_other_labels = json.load(file)
 
+    dna_type = "sequence"
+    if hasattr(args.model_config, "dna") and hasattr(args.model_config.dna, "input_type"):
+        dna_type = args.model_config.dna.input_type
+
+    dna_tokenizer= None
+    if dna_type == "sequence":
+        if hasattr(args.model_config, "pre_train_for_barcode_bert") and (
+                args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
+            dna_tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
+        else:
+            dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k,
+                                                     max_len=args.barcodebert_setting.old_model_setting.max_len)
     
 
     trainval_dataset = INSECTDataset(
@@ -1080,7 +1095,8 @@ def load_insect_dataloader_trainval(args, num_workers=8, shuffle_for_train_seen_
         species_to_others=specie_to_other_labels, split="trainval_loc",
         image_hdf5_path=args.insect_data.path_to_image_hdf5,
          for_training=True, cl_label=False,
-        for_open_clip=args.model_config.for_open_clip
+        for_open_clip=args.model_config.for_open_clip,
+        dna_tokenizer=dna_tokenizer
     )
 
     insect_trainval_dataloader = DataLoader(trainval_dataset, batch_size=args.model_config.batch_size,
@@ -1095,6 +1111,18 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
     with open(filename, 'r') as file:
         specie_to_other_labels = json.load(file)
 
+    dna_type = "sequence"
+    if hasattr(args.model_config, "dna") and hasattr(args.model_config.dna, "input_type"):
+        dna_type = args.model_config.dna.input_type
+
+    dna_tokenizer = None
+    if dna_type == "sequence":
+        if hasattr(args.model_config, "pre_train_for_barcode_bert") and (
+                args.model_config.pre_train_for_barcode_bert == "BIOSCAN-5M" or args.model_config.pre_train_for_barcode_bert == "CANADA-1M"):
+            dna_tokenizer = AutoTokenizer.from_pretrained("bioscan-ml/BarcodeBERT", trust_remote_code=True)
+        else:
+            dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k,
+                                                     max_len=args.barcodebert_setting.old_model_setting.max_len)
 
 
     if load_all_in_one:
@@ -1102,7 +1130,7 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="all",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         all_dataloader = DataLoader(all_dataset, batch_size=args.model_config.batch_size,
@@ -1115,35 +1143,35 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
             species_to_others=specie_to_other_labels, split="train_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
             for_training=True, cl_label=True,
-            for_open_clip=args.model_config.for_open_clip
+            for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         train_dataset_for_key = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="train_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         val_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="val_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         test_seen_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="test_seen_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         test_unseen_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="test_unseen_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip
+            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
         )
         if rank is None:
             insect_train_dataloader = DataLoader(train_dataset, batch_size=args.model_config.batch_size,
