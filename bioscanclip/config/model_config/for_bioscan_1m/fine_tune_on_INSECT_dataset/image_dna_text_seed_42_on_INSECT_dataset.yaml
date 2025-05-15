@@ -43,7 +43,7 @@ amp: true
 
 random_seed: false
 
-eval_skip_epoch: 70
+eval_skip_epoch: 0
 
 default_seed: 42
 
