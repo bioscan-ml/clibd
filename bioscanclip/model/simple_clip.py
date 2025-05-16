@@ -210,12 +210,18 @@ def load_clip_model(args, device=None):
 
                 pre_trained_barcode_bert = load_pre_trained_bioscan_bert(
                     bioscan_bert_checkpoint=barcode_bert_ckpt)
+
+                use_cls_token_as_dna_output = False
+                if hasattr(args.model_config.dna, 'use_cls_token_as_output'):
+                    use_cls_token_as_dna_output = args.model_config.dna.use_cls_token_as_dna_output
+
+
                 if disable_lora:
                     dna_encoder = CLIBDDNAEncoder(model=pre_trained_barcode_bert, r=4,
-                                                  num_classes=args.model_config.output_dim, lora_layer=[])
+                                                  num_classes=args.model_config.output_dim, lora_layer=[], use_cls_token_as_dna_output=use_cls_token_as_dna_output)
                 else:
                     dna_encoder = CLIBDDNAEncoder(model=pre_trained_barcode_bert, r=4,
-                                                  num_classes=args.model_config.output_dim)
+                                                  num_classes=args.model_config.output_dim, use_cls_token_as_dna_output=use_cls_token_as_dna_output)
         else:
             dna_encoder = MLPEncoder(input_dim=args.model_config.dna.input_dim,
                                      hidden_dim=args.model_config.dna.hidden_dim,

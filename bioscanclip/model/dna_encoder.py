@@ -144,7 +144,7 @@ class _LoRALayer(nn.Module):
 
 
 class CLIBDDNAEncoder(nn.Module):
-    def __init__(self, model, r: int, num_classes: int = 0, lora_layer=None):
+    def __init__(self, model, r: int, num_classes: int = 0, lora_layer=None, use_cls_token_as_dna_output=False):
         super(CLIBDDNAEncoder, self).__init__()
 
         assert r > 0
@@ -156,6 +156,7 @@ class CLIBDDNAEncoder(nn.Module):
         # create for storage, then we can init them or load weights
         self.w_As = []  # These are linear layers
         self.w_Bs = []
+        self.use_cls_token_as_dna_output = use_cls_token_as_dna_output
 
         # lets freeze first
         for param in model.parameters():
@@ -195,6 +196,9 @@ class CLIBDDNAEncoder(nn.Module):
             nn.init.zeros_(w_B.weight)
 
     def forward(self, input) -> Tensor:
+
+
+
         input_ids = input["input_ids"].to(device)
 
         outputs = self.base_dna_encoder(
@@ -202,8 +206,13 @@ class CLIBDDNAEncoder(nn.Module):
             output_hidden_states=True
         )
 
-        hidden_states = outputs.hidden_states[-1]
-        return hidden_states.mean(dim=1)
+        if self.use_cls_token_as_dna_output:
+            hidden_states = outputs.hidden_states[-1][:, 0, :]
+            return hidden_states
+        else:
+            hidden_states = outputs.hidden_states[-1]
+            return hidden_states.mean(dim=1)
+
 
 
 class Freeze_DNA_Encoder(nn.Module):

@@ -40,6 +40,8 @@ eval_skip_epoch: 23
 
 default_seed: 42
 
+use_cls_token_as_dna_output: true
+
 fine_tuning_set:
   batch_size: 150
   epochs: 15
