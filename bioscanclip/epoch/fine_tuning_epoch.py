@@ -89,7 +89,12 @@ def fine_tuning_epoch_image_and_dna(args, image_classifier, dna_classifier, inse
         target = target.to(device)
         optimizer.zero_grad()
         image_input_batch = image_input_batch.to(device)
-        dna_input_batch = dna_input_batch.to(device)
+        if isinstance(dna_input_batch, torch.Tensor):
+            dna_input_batch = dna_input_batch.to(device)
+        elif isinstance(dna_input_batch, dict):
+            pass
+        else:
+            raise TypeError("dna_input_batch should be a tensor")
         image_output = image_classifier(image_input_batch)
         dna_output = dna_classifier(dna_input_batch)
         loss = criterion(image_output, target) + criterion(dna_output, target)

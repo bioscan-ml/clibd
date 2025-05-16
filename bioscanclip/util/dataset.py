@@ -1094,13 +1094,16 @@ def load_insect_dataloader_trainval(args, num_workers=8, shuffle_for_train_seen_
             dna_tokenizer = KmerTokenizerWithAttMask(k=args.barcodebert_setting.old_model_setting.k,
                                                      max_len=args.barcodebert_setting.old_model_setting.max_len)
     
+    for_open_clip = False
+    if hasattr(args.model_config, "for_open_clip"):
+        for_open_clip = args.model_config.for_open_clip
 
     trainval_dataset = INSECTDataset(
         args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
         species_to_others=specie_to_other_labels, split="trainval_loc",
         image_hdf5_path=args.insect_data.path_to_image_hdf5,
          for_training=True, cl_label=False,
-        for_open_clip=args.model_config.for_open_clip,
+        for_open_clip=for_open_clip,
         dna_tokenizer=dna_tokenizer
     )
 
@@ -1130,12 +1133,16 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
                                                      max_len=args.barcodebert_setting.old_model_setting.max_len)
 
 
+    for_open_clip = False
+    if hasattr(args.model_config, "for_open_clip"):
+        for_open_clip = args.model_config.for_open_clip
+
     if load_all_in_one:
         all_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="all",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
+            for_training=False, for_open_clip=for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         all_dataloader = DataLoader(all_dataset, batch_size=args.model_config.batch_size,
@@ -1148,35 +1155,35 @@ def load_insect_dataloader(args, world_size=None, rank=None, num_workers=8, load
             species_to_others=specie_to_other_labels, split="train_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
             for_training=True, cl_label=True,
-            for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
+            for_open_clip=for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         train_dataset_for_key = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="train_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
+            for_training=False, for_open_clip=for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         val_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="val_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
+            for_training=False, for_open_clip=for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         test_seen_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="test_seen_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
+            for_training=False, for_open_clip=for_open_clip, dna_tokenizer=dna_tokenizer
         )
 
         test_unseen_dataset = INSECTDataset(
             args.insect_data.path_to_att_splits_mat, args.insect_data.path_to_res_101_mat,
             species_to_others=specie_to_other_labels, split="test_unseen_loc",
             image_hdf5_path=args.insect_data.path_to_image_hdf5,
-            for_training=False, for_open_clip=args.model_config.for_open_clip, dna_tokenizer=dna_tokenizer
+            for_training=False, for_open_clip=for_open_clip, dna_tokenizer=dna_tokenizer
         )
         if rank is None:
             insect_train_dataloader = DataLoader(train_dataset, batch_size=args.model_config.batch_size,
