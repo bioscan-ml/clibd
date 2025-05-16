@@ -57,7 +57,12 @@ def evaluate_epoch(model, dataloader, device, unique_species_for_seen, k_values=
                 image_input_batch = image_input_batch.to(device)
                 output = model(image_input_batch)
             elif modality == "dna":
-                dna_input_batch = dna_input_batch.to(device)
+                if isinstance(dna_input_batch, torch.Tensor):
+                    dna_input_batch = dna_input_batch.to(device)
+                elif isinstance(dna_input_batch, dict):
+                    pass
+                else:
+                    raise TypeError("dna_input_batch should be a tensor")
                 output = model(dna_input_batch)
             predictions = torch.argsort(output, dim=1, descending=True)[:, :max(k_values)]
 
