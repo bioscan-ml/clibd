@@ -1,0 +1,39 @@
+batch_size: 200
+epochs: 1
+labels_for_driven_positive_and_negative_pairs:
+wandb_project_name: BIOSCAN-CLIP-small_experiments_test_trainable_temp
+using_train_seen_for_pre_train: true
+dataset: bioscan_1m
+
+image:
+  input_type: image
+  model: vit
+dna:
+  input_type: sequence
+  model: barcode_bert
+language:
+  input_type: sequence
+  model: bert_small
+
+model_output_name: full_fine_tuning_trainable_temperature_one_epoch
+evaluation_period: 1
+ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_ckpt_from_rerun/other_experiments/trainable_temp/best.pth
+output_dim: 768
+port: 29528
+
+disable_lora: true
+lr_scheduler: one_cycle
+lr_config:
+  lr: 0.000001
+  max_lr: 0.00005
+
+all_gather: true
+loss_setup:
+  gather_with_grad: true
+  use_horovod: false
+  local_loss: false
+amp: true
+
+random_seed: false
+
+default_seed: 42
