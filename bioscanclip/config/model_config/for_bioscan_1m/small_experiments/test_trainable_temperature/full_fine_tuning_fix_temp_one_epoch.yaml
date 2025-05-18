@@ -17,7 +17,6 @@ language:
 
 model_output_name: full_fine_tuning_fix_temperature_one_epoch
 evaluation_period: 1
-ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_ckpt_from_rerun/other_experiments/fix_temp/best.pth
 output_dim: 768
 port: 29527
 
