@@ -157,6 +157,7 @@ class CLIBDDNAEncoder(nn.Module):
         self.w_As = []  # These are linear layers
         self.w_Bs = []
         self.use_cls_token_as_dna_output = use_cls_token_as_dna_output
+        self.use_averaged_logit_as_dna_output = use_averaged_logit_as_dna_output
 
         # lets freeze first
         for param in model.parameters():
@@ -221,6 +222,8 @@ class CLIBDDNAEncoder(nn.Module):
             output = outputs.logits
             # Average the logits across the sequence length dimension
             output = output.mean(dim=1)
+            print("!")
+            exit()
             return output
         else:
             outputs = self.base_dna_encoder(
