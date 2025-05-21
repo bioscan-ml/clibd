@@ -9,7 +9,7 @@ import torch.multiprocessing as mp
 from omegaconf import DictConfig
 from tqdm import tqdm
 
-from bioscanclip.util.dataset_for_insect_dataset import load_insect_dataloader
+from bioscanclip.util.dataset import load_insect_dataloader
 from bioscanclip.util.util import get_features_and_label
 from bioscanclip.model.simple_clip import load_clip_model
 
@@ -42,7 +42,7 @@ def main_process(rank: int, world_size: int, args):
     #     checkpoint = torch.load(args.model_config.pretrained_ckpt_path, map_location='cuda:0')
 
     # For now, just use model without fine-tuned on INSECT dataset
-    use_ckpt_fine_tuned_on_INSECT_dataset = False
+    use_ckpt_fine_tuned_on_INSECT_dataset = True
     if use_ckpt_fine_tuned_on_INSECT_dataset:
         checkpoint = torch.load(args.model_config.ckpt_path, map_location='cuda:0')
     else:

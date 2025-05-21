@@ -101,7 +101,7 @@ def generate_embedding_plot(args, image_features, dna_features, language_feature
             return None, None, None
         return np.unique(language_features, axis=0, return_index=True, return_inverse=True)
 
-    levels = ["order", "family", "genus", "species"]
+    levels = ["family", "genus", "species", "order"]
 
     unique_lang_features, lang_indices, inv_indices = get_language_feature_mapping(language_features)
     # compute 2D embeddings
@@ -182,41 +182,36 @@ def generate_embedding_plot(args, image_features, dna_features, language_feature
             trace["name"] = trace["name"].split(",")[0]
 
             if trace["name"] not in region_lst:
-                trace["showlegend"] = True
+                trace["showlegend"] = False
                 region_lst.add(trace["name"])
             else:
                 trace["showlegend"] = False
 
         fig_2d.update_layout(
-            legend=dict(
-                orientation="v",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="center",
-                x=0.5,
-                title="",
-                itemsizing="constant",
-                traceorder="normal",
-                itemwidth=30,
-                tracegroupgap=5,
-            ),
-            margin=dict(l=0, r=0, t=0, b=0),
+            {
+                "paper_bgcolor": "rgba(0, 0, 0, 0)",
+                "plot_bgcolor": "rgba(0, 0, 0, 0)",
+                "legend_title": level,
+                "yaxis": {"visible": False},
+                "xaxis": {"visible": False},
+                "margin": dict(
+                    l=5,  # left
+                    r=5,  # right
+                    t=5,  # top
+                    b=5,  # bottom
+                ),
+                "activeselection_opacity": 1.0,
+            }
         )
 
         folder_path = os.path.join(args.project_root_path, f"{PLOT_FOLDER}/{args.model_config.model_output_name}")
         os.makedirs(folder_path, exist_ok=True)
         # fig_3d.update_traces(marker_size=5)
         fig_2d.write_html(os.path.join(folder_path, f"{level}_2d.html"))
-        plotly.io.write_image(
-            fig_2d, os.path.join(folder_path, f"{level}_2d.pdf"), format="pdf", height=3200, width=3200
-        )
-        # plotly.io.write_image(fig_2d, os.path.join(folder_path, f"{level}_2d.pdf"), format="pdf", height=1200, width=1600)
+        plotly.io.write_image(fig_2d, os.path.join(folder_path, f"{level}_2d.pdf"), format="pdf", height=600, width=800)
         print(f"Saved {level} plot in {os.path.join(folder_path, f'{level}_2d.html')}")
         # fig_3d.write_html(os.path.join(folder_path, f'{level}_3d.html'))
-        # fig_2d.show()
-        plotly.io.write_image(
-            fig_2d, os.path.join(folder_path, f"{level}_2d.pdf"), format="pdf", height=3200, width=3200
-        )
+        fig_2d.show()
         # fig_3d.show()
 
 
@@ -283,6 +278,11 @@ def retrieve_images(
 
     # initialize retrieval results
     retrieved_images_json_path = os.path.join(folder_path, "retrieved_images.json")
+
+    id = "processed_id_list"
+    if id not in query_dict.keys():
+        id = "file_name_list"
+
     if load_cached_results and os.path.exists(retrieved_images_json_path):
         with open(retrieved_images_json_path, "r") as json_file:
             retrieval_results = json.load(json_file)
@@ -294,7 +294,7 @@ def retrieve_images(
             retrieval_results.append(
                 {
                     "query": {
-                        "file_name": query_dict["processed_id_list"][query_index],
+                        "file_name": query_dict[id][query_index],
                         "taxonomy": query_dict["label_list"][query_index],
                     },
                     "results": [],
@@ -369,7 +369,7 @@ def retrieve_images(
                 for retrieved_index in indices_per_query:
                     retrieval_results[idx]["results"][query_key_idx]["predictions"].append(
                         {
-                            "file_name": keys_dict["processed_id_list"][retrieved_index],
+                            "file_name": keys_dict[id][retrieved_index],
                             "taxonomy": keys_dict["label_list"][retrieved_index],
                         }
                     )

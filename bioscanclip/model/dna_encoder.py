@@ -144,7 +144,7 @@ class _LoRALayer(nn.Module):
 
 
 class CLIBDDNAEncoder(nn.Module):
-    def __init__(self, model, r: int, num_classes: int = 0, lora_layer=None, use_cls_token_as_dna_output=False):
+    def __init__(self, model, r: int, num_classes: int = 0, lora_layer=None, use_cls_token_as_dna_output=False, use_averaged_logit_as_dna_output=False):
         super(CLIBDDNAEncoder, self).__init__()
 
         assert r > 0
@@ -207,11 +207,29 @@ class CLIBDDNAEncoder(nn.Module):
         )
 
         if self.use_cls_token_as_dna_output:
-            hidden_states = outputs.hidden_states[-1][:, 0, :]
-            return hidden_states
+            outputs = self.base_dna_encoder(
+                input_ids=input_ids,
+                output_hidden_states=True
+            )
+            output = outputs.hidden_states[-1][:, 0, :]
+            return output
+        elif self.use_averaged_logit_as_dna_output:
+            outputs = self.base_dna_encoder(
+                input_ids=input_ids,
+            )
+            # Get the logits from the last layer
+            output = outputs.logits
+            # Average the logits across the sequence length dimension
+            output = output.mean(dim=1)
+            return output
         else:
+            outputs = self.base_dna_encoder(
+                input_ids=input_ids,
+                output_hidden_states=True
+            )
             hidden_states = outputs.hidden_states[-1]
-            return hidden_states.mean(dim=1)
+            output = hidden_states.mean(dim=1)
+            return output
 
 
 
