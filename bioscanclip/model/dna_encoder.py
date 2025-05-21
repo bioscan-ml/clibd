@@ -222,8 +222,6 @@ class CLIBDDNAEncoder(nn.Module):
             output = outputs.logits
             # Average the logits across the sequence length dimension
             output = output.mean(dim=1)
-            print("!")
-            exit()
             return output
         else:
             outputs = self.base_dna_encoder(
