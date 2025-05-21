@@ -202,11 +202,6 @@ class CLIBDDNAEncoder(nn.Module):
 
         input_ids = input["input_ids"].to(device)
 
-        outputs = self.base_dna_encoder(
-            input_ids=input_ids,
-            output_hidden_states=True
-        )
-
         if self.use_cls_token_as_dna_output:
             outputs = self.base_dna_encoder(
                 input_ids=input_ids,
