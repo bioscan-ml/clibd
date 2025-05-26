@@ -40,7 +40,7 @@ eval_skip_epoch: 23
 
 default_seed: 42
 
-use_averaged_logit_as_dna_output: true
+dna_output_pipeline: logits_mean
 
 fine_tuning_set:
   batch_size: 150
