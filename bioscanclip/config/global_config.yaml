@@ -38,7 +38,7 @@ bioscan_bert_checkpoint_trained_with_bioscan_5_m: ${project_root_path}/ckpt/Barc
 model_output_dir: ${project_root_path}/ckpt/bioscan_clip
 
 inference_and_eval_setting:
-  plot_embeddings: true
+  plot_embeddings: false
   retrieve_images: false
   k_list: [1, 3, 5]
   levels: ['order', 'family', 'genus', 'species']
@@ -73,4 +73,6 @@ barcodebert_setting:
     k: 5
     max_len: 660
 
-version: ver_1_1
+version: ver_1_0
+
+default_dna_output_pipeline: hidden_state_mean

@@ -211,13 +211,9 @@ def load_clip_model(args, device=None):
                 pre_trained_barcode_bert = load_pre_trained_bioscan_bert(
                     bioscan_bert_checkpoint=barcode_bert_ckpt)
 
-                use_cls_token_as_dna_output = False
-                if hasattr(args.model_config.dna, 'use_cls_token_as_output'):
-                    use_cls_token_as_dna_output = args.model_config.dna.use_cls_token_as_dna_output
-
-                use_averaged_logit_as_dna_output = False
-                if hasattr(args.model_config.dna, 'use_averaged_logit_as_dna_output'):
-                    use_averaged_logit_as_dna_output = args.model_config.dna.use_averaged_logit_as_dna_output
+                dna_output_pipeline = args.default_dna_output_pipeline
+                if hasattr(args.model_config, 'dna_output_pipeline'):
+                    dna_output_pipeline = args.model_config.dna_output_pipeline
 
                 if disable_lora:
                     lora_layer = []
@@ -226,7 +222,7 @@ def load_clip_model(args, device=None):
 
                 if disable_lora:
                     dna_encoder = CLIBDDNAEncoder(model=pre_trained_barcode_bert, r=4,
-                                                  num_classes=args.model_config.output_dim, lora_layer=lora_layer, use_cls_token_as_dna_output=use_cls_token_as_dna_output, use_averaged_logit_as_dna_output=use_averaged_logit_as_dna_output)
+                                                  num_classes=args.model_config.output_dim, lora_layer=lora_layer, dna_output_pipeline=dna_output_pipeline)
 
         else:
             dna_encoder = MLPEncoder(input_dim=args.model_config.dna.input_dim,

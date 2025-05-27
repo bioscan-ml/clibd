@@ -16,7 +16,6 @@ language:
 
 model_output_name: image_dna_text_4gpu
 evaluation_period: 1
-ckpt_path: ${project_root_path}/ckpt/bioscan_clip/new_ckpt_from_rerun/main_experiments/bioscan_1m/I_D_T/best.pth
 output_dim: 768
 port: 29531
 

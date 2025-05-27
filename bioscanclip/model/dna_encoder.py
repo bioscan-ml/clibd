@@ -8,7 +8,6 @@ from torchtext.vocab import build_vocab_from_iterator
 from transformers import BertConfig, BertForMaskedLM
 from bioscanclip.util.util import remove_extra_pre_fix
 
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -19,7 +18,7 @@ def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint, k=5):
         bioscan_bert_checkpoint: Path to checkpoint file
         k: k-mer size (default: 5)
     """
-    
+
     # Build k-mer vocabulary
     kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
     vocab = build_vocab_from_iterator(kmer_iter, specials=["<MASK>", "<CLS>", "<UNK>"])
@@ -47,6 +46,7 @@ def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint, k=5):
     # Load state dict
     model.load_state_dict(model_ckpt, strict=False)
     return model.to(device)
+
 
 class KmerTokenizerWithAttMask(object):
     def __init__(self, k: int = 5, max_len: int = 660, stride: int = None):
@@ -81,7 +81,7 @@ class KmerTokenizerWithAttMask(object):
 
         # 2) split into k-mers
         tokens = [
-            seq[i : i + self.k]
+            seq[i: i + self.k]
             for i in range(0, len(seq) - self.k + 1, self.stride)
         ]
 
@@ -93,6 +93,7 @@ class KmerTokenizerWithAttMask(object):
             "input_ids": input_ids,
         }
 
+
 # Old kmer tokenizer
 class KmerTokenizer(object):
     def __init__(self, k, stride=1):
@@ -102,9 +103,10 @@ class KmerTokenizer(object):
     def __call__(self, dna_sequence):
         tokens = []
         for i in range(0, len(dna_sequence) - self.k + 1, self.stride):
-            k_mer = dna_sequence[i : i + self.k]
+            k_mer = dna_sequence[i: i + self.k]
             tokens.append(k_mer)
         return tokens
+
 
 class PadSequence(object):
     def __init__(self, max_len):
@@ -115,6 +117,7 @@ class PadSequence(object):
             return dna_sequence[: self.max_len]
         else:
             return dna_sequence + "N" * (self.max_len - len(dna_sequence))
+
 
 def get_sequence_pipeline(k=5):
     kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
@@ -144,7 +147,7 @@ class _LoRALayer(nn.Module):
 
 
 class CLIBDDNAEncoder(nn.Module):
-    def __init__(self, model, r: int, num_classes: int = 0, lora_layer=None, use_cls_token_as_dna_output=False, use_averaged_logit_as_dna_output=False):
+    def __init__(self, model, r: int, num_classes: int = 0, lora_layer=None, dna_output_pipeline="hidden_state_mean"):
         super(CLIBDDNAEncoder, self).__init__()
 
         assert r > 0
@@ -156,8 +159,7 @@ class CLIBDDNAEncoder(nn.Module):
         # create for storage, then we can init them or load weights
         self.w_As = []  # These are linear layers
         self.w_Bs = []
-        self.use_cls_token_as_dna_output = use_cls_token_as_dna_output
-        self.use_averaged_logit_as_dna_output = use_averaged_logit_as_dna_output
+        self.dna_output_pipeline = dna_output_pipeline
 
         # lets freeze first
         for param in model.parameters():
@@ -198,18 +200,18 @@ class CLIBDDNAEncoder(nn.Module):
 
     def forward(self, input) -> Tensor:
 
-
-
         input_ids = input["input_ids"].to(device)
 
-        if self.use_cls_token_as_dna_output:
+        if self.dna_output_pipeline == "logits_softmax_mean":
+            return self.base_dna_encoder(input_ids).logits.softmax(dim=-1).mean(dim=1)
+        elif self.dna_output_pipeline == "cls_token":
             outputs = self.base_dna_encoder(
                 input_ids=input_ids,
                 output_hidden_states=True
             )
             output = outputs.hidden_states[-1][:, 0, :]
             return output
-        elif self.use_averaged_logit_as_dna_output:
+        elif self.dna_output_pipeline == "logits_mean":
             outputs = self.base_dna_encoder(
                 input_ids=input_ids,
             )
@@ -218,7 +220,7 @@ class CLIBDDNAEncoder(nn.Module):
             # Average the logits across the sequence length dimension
             output = output.mean(dim=1)
             return output
-        else:
+        elif self.dna_output_pipeline == "hidden_state_mean":
             outputs = self.base_dna_encoder(
                 input_ids=input_ids,
                 output_hidden_states=True
@@ -226,7 +228,8 @@ class CLIBDDNAEncoder(nn.Module):
             hidden_states = outputs.hidden_states[-1]
             output = hidden_states.mean(dim=1)
             return output
-
+        else:
+            raise ValueError(f"Unknown dna_output_pipeline: {self.dna_output_pipeline}")
 
 
 class Freeze_DNA_Encoder(nn.Module):
