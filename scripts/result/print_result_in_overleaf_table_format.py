@@ -526,25 +526,29 @@ def check_for_acc_about_correct_predict_seen_or_unseen(final_pred_list, species_
 
 @hydra.main(config_path="../../bioscanclip/config", config_name="global_config", version_base="1.1")
 def main(args: DictConfig) -> None:
-    acc_type = "micro_acc"
+    acc_types = ["macro_acc", "micro_acc"]
     split = "test"
     folder_for_saving = os.path.join(
         args.project_root_path, "extracted_embedding", args.model_config.dataset, args.model_config.model_output_name
     )
     acc_dict_path = os.path.join(folder_for_saving, f"acc_dict_{split}.json")
+    print(f"Loading accuracy dictionary from {acc_dict_path}")
     with open(acc_dict_path, "r") as f:
         acc_dict = json.load(f)
 
     modality_combinations = [['encoded_dna_feature','encoded_dna_feature'], ['encoded_image_feature', 'encoded_image_feature'], ['encoded_image_feature', 'encoded_dna_feature']]
     #
-    for taxonomic_level in ['order', 'family', 'genus', 'species']:
-        curr_line = ""
-        for query, key in modality_combinations:
-            seen_acc = acc_dict[query][key]["seen"][acc_type]['1'][taxonomic_level]
-            unseen_acc = acc_dict[query][key]["unseen"][acc_type]['1'][taxonomic_level]
-            harmonic_mean = 2 / (1 / seen_acc + 1 / unseen_acc)
-            curr_line += f" & {seen_acc*100:.1f} & {unseen_acc*100:.1f} & {harmonic_mean*100:.1f}"
-        print(f"{taxonomic_level} {curr_line} \\\\")
+    for acc_type in acc_types:
+        print(f"Accuracy type: {acc_type}")
+        for taxonomic_level in ['order', 'family', 'genus', 'species']:
+            curr_line = ""
+            for query, key in modality_combinations:
+                seen_acc = acc_dict[query][key]["seen"][acc_type]['1'][taxonomic_level]
+                unseen_acc = acc_dict[query][key]["unseen"][acc_type]['1'][taxonomic_level]
+                harmonic_mean = 2 / (1 / seen_acc + 1 / unseen_acc)
+                curr_line += f" & {seen_acc*100:.1f} & {unseen_acc*100:.1f} & {harmonic_mean*100:.1f}"
+            print(f"{taxonomic_level} {curr_line} \\\\")
+        print()
 
 
 

@@ -279,6 +279,7 @@ def initialize_model_and_load_from_checkpoint(args, device=None):
         model.load_state_dict(checkpoint)
         print(f"Loaded from local: {local_ckpt_path}")
     else:
+        print(f"\"{local_ckpt_path}\" not found, trying to load from Hugging Face Hub...")
         try:
             hf_model_name = f"ckpt/bioscan_clip/{args.version}/{args.model_config.dataset}/{args.model_config.model_output_name}/best.pth"
             try:
