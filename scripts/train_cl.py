@@ -338,7 +338,7 @@ def main_process(rank: int, world_size: int, args):
             root, ext = os.path.splitext(name)
             if ext:
                 dir_path = os.path.dirname(local_ckpt_path)
-                os.makedirs(local_ckpt_path, exist_ok=True)
+                os.makedirs(dir_path, exist_ok=True)
                 shutil.copytree(folder_path, dir_path, dirs_exist_ok=True)
             else:
                 os.makedirs(local_ckpt_path, exist_ok=True)
