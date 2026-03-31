@@ -1,4 +1,4 @@
-batch_size: 480
+batch_size: 500
 epochs: 50
 # No pretrained weights: ViT, BERT, BarcodeBERT all random init; architecture unchanged
 no_pretrained_weights: true

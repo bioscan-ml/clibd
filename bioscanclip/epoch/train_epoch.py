@@ -8,7 +8,7 @@ from transformers import AutoTokenizer, AutoModel
 
 def train_epoch(activate_wandb, total_epochs, epoch, dataloader, model, optimizer, criterion, device, scaler, scheduler=None,
                 for_open_clip=False, rank=None, fix_temperature=None, enable_autocast=False):
-    torch.autograd.set_detect_anomaly(True)
+    torch.autograd.set_detect_anomaly(False)
     if rank == 0:
         pbar = tqdm(enumerate(dataloader), total=len(dataloader))
     else:
