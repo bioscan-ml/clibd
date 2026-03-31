@@ -50,6 +50,23 @@ def load_pre_trained_bioscan_bert(bioscan_bert_checkpoint, k=5):
     return model.to(device)
 
 
+def load_bioscan_bert_random_init(bioscan_bert_checkpoint, k=5):
+    """Same architecture as pretrained BarcodeBERT; weights are PyTorch default init (checkpoint used only for bert_config)."""
+    print(f"\nInitializing BarcodeBERT from architecture in {bioscan_bert_checkpoint} (random weights, no load_state_dict)")
+
+    kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
+    vocab = build_vocab_from_iterator(kmer_iter, specials=["<MASK>", "<CLS>", "<UNK>"])
+    vocab.set_default_index(vocab["<UNK>"])
+    vocab_size = len(vocab)
+
+    ckpt = torch.load(bioscan_bert_checkpoint, map_location="cpu")
+    config_dict = ckpt.get("bert_config", {"vocab_size": vocab_size, "output_hidden_states": True})
+    del ckpt
+    bert_config = BertConfig(**config_dict)
+    model = BertForMaskedLM(bert_config)
+    return model.to(device)
+
+
 def get_sequence_pipeline(k=5):
     kmer_iter = (["".join(kmer)] for kmer in product("ACGT", repeat=k))
     vocab = build_vocab_from_iterator(kmer_iter, specials=["<MASK>", "<CLS>", "<UNK>"])

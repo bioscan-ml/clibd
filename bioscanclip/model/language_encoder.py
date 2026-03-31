@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, BertModel, logging
+from transformers import AutoTokenizer, AutoConfig, BertModel, logging
 import torch
 import torch.nn as nn
 import math
@@ -13,6 +13,19 @@ def load_pre_trained_bert(language_model_name):
     logging.set_verbosity_error()
     tokenizer = AutoTokenizer.from_pretrained(language_model_name)
     model = BertModel.from_pretrained(language_model_name)
+    logging.set_verbosity_info()
+    for param in model.parameters():
+        param.requires_grad = False
+
+    return tokenizer, model
+
+
+def load_bert_random_init(language_model_name):
+    """Tokenizer from HF; BertModel with default (random) initialization, same architecture as from_pretrained."""
+    logging.set_verbosity_error()
+    tokenizer = AutoTokenizer.from_pretrained(language_model_name)
+    config = AutoConfig.from_pretrained(language_model_name)
+    model = BertModel(config)
     logging.set_verbosity_info()
     for param in model.parameters():
         param.requires_grad = False

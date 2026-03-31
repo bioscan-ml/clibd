@@ -8,8 +8,8 @@ from huggingface_hub.errors import HfHubHTTPError
 
 from bioscanclip.model.mlp import MLPEncoder
 from bioscanclip.model.image_encoder import CLIBDImageEncoder
-from bioscanclip.model.dna_encoder import load_pre_trained_bioscan_bert, CLIBDDNAEncoder
-from bioscanclip.model.language_encoder import load_pre_trained_bert, CLIBDLanguageEncoder
+from bioscanclip.model.dna_encoder import load_pre_trained_bioscan_bert, load_bioscan_bert_random_init, CLIBDDNAEncoder
+from bioscanclip.model.language_encoder import load_pre_trained_bert, load_bert_random_init, CLIBDLanguageEncoder
 from bioscanclip.util.util import add_lora_layer_to_open_clip, update_checkpoint_param_names, handle_local_ckpt_path
 import numpy as np
 from typing import Optional
@@ -134,6 +134,26 @@ def load_clip_model(args, device=None):
     if hasattr(args.model_config, 'for_bio_clip'):
         for_bio_clip = args.model_config.for_bio_clip
 
+    no_pretrained = getattr(args.model_config, "no_pretrained_weights", False)
+    if no_pretrained:
+        print(
+            "no_pretrained_weights=True: ViT, BERT-small, and BarcodeBERT backbones use random initialization "
+            "(no ImageNet / HF BERT / BarcodeBERT checkpoint weights)."
+        )
+
+    if no_pretrained and (
+        (using_open_clip or (image_model == "lora_clip_image" and language_model == "lora_clip_text"))
+        and not for_bio_clip
+    ):
+        raise ValueError(
+            "no_pretrained_weights is not supported with OpenCLIP (ViT-L/14) or lora_clip_image/text; "
+            "use the default ViT + bert_small + barcode_bert path."
+        )
+    if no_pretrained and for_bio_clip:
+        raise ValueError(
+            "no_pretrained_weights is not supported with for_bio_clip (BioCLIP loads pretrained weights)."
+        )
+
     if (using_open_clip or (image_model == "lora_clip_image" and language_model == "lora_clip_text")) and not for_bio_clip:
         open_clip_model, _, _ = open_clip.create_model_and_transforms('ViT-L/14', pretrained='commonpool_xl_laion_s13b_b90k')
         open_clip_model.to(device)
@@ -150,8 +170,12 @@ def load_clip_model(args, device=None):
             image_model_name = 'vit_base_patch16_224'
             if hasattr(args.model_config.image, 'pre_train_model'):
                 image_model_name = args.model_config.image.pre_train_model
-            pre_trained_timm_vit = timm.create_model(image_model_name, pretrained=True)
-            if hasattr(args.model_config.image, 'image_encoder_trained_with_simclr_style_ckpt_path'):
+            pretrained_timm = not no_pretrained
+            pre_trained_timm_vit = timm.create_model(image_model_name, pretrained=pretrained_timm)
+            if (
+                hasattr(args.model_config.image, 'image_encoder_trained_with_simclr_style_ckpt_path')
+                and not no_pretrained
+            ):
                 image_encoder_trained_with_simclr_style_ckpt_path = args.model_config.image.image_encoder_trained_with_simclr_style_ckpt_path
                 checkpoint = torch.load(image_encoder_trained_with_simclr_style_ckpt_path, map_location='cpu')
                 state_dict = checkpoint['state_dict']
@@ -163,6 +187,13 @@ def load_clip_model(args, device=None):
                 del checkpoint
                 torch.cuda.empty_cache()
                 print("Loaded image encoder from %s" % image_encoder_trained_with_simclr_style_ckpt_path)
+            elif (
+                hasattr(args.model_config.image, 'image_encoder_trained_with_simclr_style_ckpt_path')
+                and no_pretrained
+            ):
+                print(
+                    "Skipping image_encoder_trained_with_simclr_style_ckpt_path because no_pretrained_weights=True."
+                )
             if disable_lora:
                 image_encoder = CLIBDImageEncoder(vit_model=pre_trained_timm_vit, r=4,
                                                   num_classes=args.model_config.output_dim, lora_layer=[])
@@ -180,7 +211,10 @@ def load_clip_model(args, device=None):
                 language_model_name = 'prajjwal1/bert-small'
                 if hasattr(args.model_config.language, 'pre_train_model'):
                     language_model_name = args.model_config.language.pre_train_model
-                _, pre_trained_bert = load_pre_trained_bert(language_model_name)
+                if no_pretrained:
+                    _, pre_trained_bert = load_bert_random_init(language_model_name)
+                else:
+                    _, pre_trained_bert = load_pre_trained_bert(language_model_name)
                 if disable_lora:
                     language_encoder = CLIBDLanguageEncoder(model=pre_trained_bert, r=4, num_classes=args.model_config.output_dim,
                                                             lora_layer=[])
@@ -200,8 +234,12 @@ def load_clip_model(args, device=None):
                 elif hasattr(args.model_config, 'pre_train_for_barcode_bert') and args.model_config.pre_train_for_barcode_bert == "CANADA-1-5M":
                     barcode_bert_ckpt = args.bioscan_bert_checkpoint_trained_with_canada_1_5_m
 
-                pre_trained_barcode_bert = load_pre_trained_bioscan_bert(
-                    bioscan_bert_checkpoint=barcode_bert_ckpt)
+                if no_pretrained:
+                    pre_trained_barcode_bert = load_bioscan_bert_random_init(
+                        bioscan_bert_checkpoint=barcode_bert_ckpt)
+                else:
+                    pre_trained_barcode_bert = load_pre_trained_bioscan_bert(
+                        bioscan_bert_checkpoint=barcode_bert_ckpt)
                 if disable_lora:
                     dna_encoder = CLIBDDNAEncoder(model=pre_trained_barcode_bert, r=4,
                                                   num_classes=args.model_config.output_dim, lora_layer=[])
