@@ -10,6 +10,7 @@ timm~=1.0.9
 hydra-core
 seaborn~=0.13.0
 git+https://github.com/openai/CLIP.git
+git+https://github.com/Baijiong-Lin/LoRA-Torch
 pillow~=10.0.1
 scipy~=1.11.2
 safetensors~=0.4.0
