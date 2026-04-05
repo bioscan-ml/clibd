@@ -20,6 +20,7 @@ plotly==5.18.0
 umap-learn==0.5.5
 kaleido==0.2.1
 open_clip_torch
-# CC wheelhouse: use +computecanada build; ~0.16.x matches torch ~2.1.x (align with your installed torch).
+# CC wheelhouse: align torchtext/torchdata with installed torch (~2.1.x for 0.16.x).
 torchtext==0.16.1+computecanada
+torchdata~=0.7.0
 # Need cv2: `module load gcc opencv` (Alliance blocks pip opencv-python; see wiki OpenCV).
