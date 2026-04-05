@@ -19,4 +19,4 @@ plotly==5.18.0
 umap-learn==0.5.5
 kaleido==0.2.1
 open_clip_torch
-opencv-python
+# Need cv2: `module load gcc opencv` (Alliance blocks pip opencv-python; see wiki OpenCV).
