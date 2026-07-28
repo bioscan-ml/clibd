@@ -56,7 +56,9 @@ class SimpleCLIP(nn.Module):
         else:
             if self.image_encoder is not None:
                 image_output = F.normalize(self.image_encoder(image_input), p=2, dim=-1)
-            if self.language_encoder is not None:
+            # Retrieval 可显式传入 None 来跳过未使用的 text embedding；
+            # 原有训练/评估始终传入 language_input，因此其执行逻辑保持不变。
+            if self.language_encoder is not None and language_input is not None:
                 language_output = F.normalize(self.language_encoder(language_input), p=2, dim=-1)
         return image_output, dna_output, language_output, self.logit_scale.exp(), self.logit_bias
 

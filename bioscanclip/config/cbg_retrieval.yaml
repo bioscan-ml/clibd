@@ -1,0 +1,72 @@
+defaults:
+  - global_config
+  - override model_config: for_bioscan_5m/final_experiments/image_dna_text_seed_42
+  - _self_
+
+project_root_path: ${oc.env:PWD}
+bioscan_5m_data:
+  path_to_hdf5_data: ${project_root_path}/data/BIOSCAN_5M/BIOSCAN_5M.hdf5
+
+cbg_retrieval:
+  stage: all
+  checkpoint_path: ${project_root_path}/ckpt/bioscan_clip/${version}/${model_config.dataset}/${model_config.model_output_name}/best.pth
+  query_hdf5: ${project_root_path}/data/CBG_RIG/BIOSCAN_CBG_COI5P.hdf5
+  query_group: no_split
+  reference_hdf5: ${bioscan_5m_data.path_to_hdf5_data}
+  output_dir: ${project_root_path}/retrieval_results/cbg_rig_data/${model_config.model_output_name}
+
+  # The first evaluation round uses every CBG row with a non-empty species label.
+  query_require_species: true
+  blank_labels: ["", "not_classified", "nan", "none", "unknown"]
+
+  reference_set: all_keys
+  reference_sets:
+    all_keys:
+      groups: [all_keys]
+      deduplicate_processid: true
+      index_type: flat
+      search_device: gpu
+    full_unique:
+      # Earlier groups win when a processid occurs in more than one HDF5 group.
+      groups:
+        - no_split_and_seen_train
+        - unseen_keys
+        - other_heldout
+        - test_seen
+        - test_unseen
+        - val_seen
+        - val_unseen
+      deduplicate_processid: true
+      index_type: ivf_flat
+      search_device: cpu
+
+  embedding:
+    batch_size: 64
+    num_workers: 4
+    pin_memory: true
+    flush_every_batches: 100
+    dtype: float32
+
+  index:
+    add_batch_size: 16384
+    ivf_nlist: 8192
+    ivf_nprobe: 64
+    ivf_train_size: 500000
+    random_seed: 42
+
+  retrieval:
+    pairs: [image_to_image, dna_to_dna, image_to_dna]
+    top_k: [1, 5, 10]
+    query_batch_size: 1024
+    exclude_blank_ground_truth: true
+
+  # Non-null values make a fast end-to-end smoke run without changing manifests.
+  limits:
+    query: null
+    reference: null
+
+  overwrite:
+    manifests: false
+    embeddings: false
+    indices: false
+    predictions: false

@@ -9,6 +9,7 @@ build
 bioscanclip.egg-info
 html_plots
 extracted_embedding
+retrieval_results/
 Fine-Grained-ZSL-with-DNA
 representation_visualization*
 logs/retrieval
